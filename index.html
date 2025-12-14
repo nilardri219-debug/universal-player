@@ -144,14 +144,22 @@
                 </div>
 
                 <!-- Controls & Meta -->
-                <div class="mt-4 flex items-center justify-between">
-                    <div class="flex gap-2">
+                <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex gap-2 items-center">
                         <button onclick="app.data.toggleFavorite()" id="btn-fav" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
                             <i class="fa-regular fa-star"></i> Favorite
                         </button>
                         <button onclick="app.data.addToPlaylist()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
                             <i class="fa-regular fa-folder"></i> Add to Playlist
                         </button>
+                        
+                        <!-- NEW: Quality Selector -->
+                        <div id="quality-control" class="hidden flex items-center gap-2 ml-2 border-l border-gray-700 pl-4">
+                            <label class="text-sm text-gray-400 font-bold"><i class="fa-solid fa-sliders"></i> Quality:</label>
+                            <select id="quality-select" class="bg-gray-800 text-white text-sm rounded-lg px-2 py-1.5 border border-gray-700 focus:outline-none focus:border-brand-500">
+                                <option value="-1">Auto</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div id="fallback-trigger" class="hidden">
@@ -288,7 +296,6 @@
 
             async addAction(type, value, extra = null) {
                 if (!this.user) {
-                    // Local fallback could go here, but for "Pro" we ask login
                     app.ui.toast("Please sign in to save data.", "error");
                     return;
                 }
@@ -330,6 +337,8 @@
                 this.hls = null;
                 this.container = document.getElementById('active-player');
                 this.placeholder = document.getElementById('player-placeholder');
+                this.qualityCtrl = document.getElementById('quality-control');
+                this.qualitySelect = document.getElementById('quality-select');
             }
 
             load(url) {
@@ -359,6 +368,10 @@
                 this.container.classList.remove('hidden');
                 this.placeholder.classList.add('hidden');
                 document.getElementById('fallback-trigger').classList.add('hidden');
+                
+                // Reset quality controls
+                this.qualityCtrl.classList.add('hidden');
+                this.qualitySelect.innerHTML = '<option value="-1">Auto</option>';
             }
 
             playHLS(url) {
@@ -372,7 +385,33 @@
                     this.hls = new Hls();
                     this.hls.loadSource(url);
                     this.hls.attachMedia(video);
-                    this.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                    
+                    // --- QUALITY SELECTOR LOGIC ---
+                    this.hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+                        const levels = data.levels;
+                        const selector = this.qualitySelect;
+                        
+                        // Show control if multiple qualities exist
+                        if(levels.length > 0) {
+                            this.qualityCtrl.classList.remove('hidden');
+                            
+                            // Populate Dropdown
+                            levels.forEach((level, index) => {
+                                const opt = document.createElement('option');
+                                opt.value = index;
+                                opt.text = level.height + 'p (' + Math.round(level.bitrate/1000) + 'k)';
+                                selector.appendChild(opt);
+                            });
+
+                            // Handle Change
+                            selector.onchange = (e) => {
+                                this.hls.currentLevel = parseInt(e.target.value);
+                                app.ui.toast(`Quality set to ${e.target.options[e.target.selectedIndex].text}`);
+                            };
+                        }
+                        video.play();
+                    });
+
                     this.hls.on(Hls.Events.ERROR, (e, data) => {
                         if (data.fatal) app.ui.toast("Stream Error: " + data.details, "error");
                     });
@@ -392,7 +431,6 @@
             }
 
             playEmbed(url) {
-                // Smart Converter Logic inline
                 let embedUrl = url;
                 try {
                     const u = new URL(url);
@@ -413,7 +451,6 @@
                     <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>
                 `;
                 
-                // Show fallback button for these types
                 document.getElementById('fallback-trigger').classList.remove('hidden');
                 app.ui.toast("Loaded Embed Player. If blocked, use Pop-out.", "info");
             }
@@ -444,16 +481,14 @@
                 btn.innerHTML = '<span class="loader"></span> Scanning...';
                 btn.disabled = true;
 
-                // Try proxies sequentially
                 let found = null;
                 for (const proxy of CONFIG.proxies) {
                     try {
                         const res = await fetch(proxy + encodeURIComponent(input));
                         const text = await res.text();
-                        // Regex to find .m3u8 in source code (common in video players)
                         const match = text.match(/(https?:\\?\/\\?\/[^"'\s]+\.m3u8[^"'\s]*)/);
                         if (match) {
-                            found = match[0].replace(/\\/g, ''); // Unescape
+                            found = match[0].replace(/\\/g, ''); 
                             break;
                         }
                     } catch (e) { console.log("Proxy failed", proxy); }
@@ -494,13 +529,9 @@
             }
 
             navigate(view) {
-                // Simple router
                 document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`view-${view}`).classList.remove('hidden');
-                
-                // Update Sidebar Active State
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-gray-800', 'text-white'));
-                // (Simplified active state logic for this demo)
             }
 
             toast(msg, type = "info") {
@@ -536,7 +567,6 @@
                 this.currentListTab = tab;
                 this.activePlaylist = null;
                 
-                // Tab styling
                 document.querySelectorAll('.list-tab').forEach(t => {
                     t.classList.remove('text-brand-500', 'border-b-2', 'border-brand-500');
                     t.classList.add('text-gray-500');
@@ -560,7 +590,6 @@
                 else if (tab === 'favorites') items = data.favorites;
                 else if (tab === 'playlists') {
                     if (this.activePlaylist) {
-                        // Header for Playlist Back
                         const back = document.createElement('div');
                         back.className = "p-2 mb-2 bg-gray-800 rounded cursor-pointer hover:bg-gray-700 text-sm font-bold flex items-center gap-2";
                         back.innerHTML = `<i class="fa-solid fa-arrow-left"></i> ${this.activePlaylist}`;
@@ -568,7 +597,6 @@
                         container.appendChild(back);
                         items = data.playlists[this.activePlaylist] || [];
                     } else {
-                        // Render Folders
                         const names = Object.keys(data.playlists);
                         if (names.length === 0) container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">No playlists.</div>';
                         
@@ -584,7 +612,6 @@
                                 <button class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-trash"></i></button>
                             `;
                             el.querySelector('div').onclick = () => { this.activePlaylist = name; this.renderList(); };
-                            // Delete logic would go here
                             container.appendChild(el);
                         });
                         return;
@@ -608,7 +635,6 @@
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     `;
-                    // Delete handler (simplified)
                     el.querySelector('.delete-btn').onclick = () => { /* Add delete logic */ };
                     container.appendChild(el);
                 });
@@ -646,7 +672,6 @@
                 this.player = new VideoEngine();
                 this.converter = new Converter();
                 
-                // Expose methods for data
                 this.data = {
                     toggleFavorite: () => this.store.addAction('favorite', this.store.currentVideo),
                     addToPlaylist: () => {
@@ -655,7 +680,6 @@
                     }
                 };
 
-                // Expose auth toggle
                 this.auth = {
                     toggle: () => {
                         if (this.store.user) {
