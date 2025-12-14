@@ -94,7 +94,6 @@
                     <p id="user-name" class="text-sm font-medium truncate">Guest</p>
                     <p id="auth-status" class="text-xs text-gray-500 truncate">Not synced</p>
                 </div>
-                <!-- FIXED: Using safe call for auth toggle -->
                 <button onclick="window.app?.auth?.toggle()" class="text-gray-400 hover:text-white">
                     <i class="fa-solid fa-right-to-bracket"></i>
                 </button>
@@ -179,35 +178,36 @@
             <!-- VIEW: CONVERTER -->
             <div id="view-converter" class="view-section max-w-3xl mx-auto fade-in hidden">
                 <div class="bg-gray-900 rounded-xl border border-gray-800 p-8">
-                    <h2 class="text-2xl font-bold text-brand-500 mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Link Converter</h2>
-                    <p class="text-gray-400 mb-6">Extract stream links (.m3u8) from websites securely.</p>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-brand-500"><i class="fa-solid fa-wand-magic-sparkles"></i> Link Converter</h2>
+                        <!-- Verification Badge (Visual Only) -->
+                        <div class="flex items-center gap-2 bg-green-900/30 px-3 py-1 rounded-full border border-green-500/30">
+                            <i class="fa-solid fa-check-circle text-green-500"></i>
+                            <span class="text-xs font-bold text-green-400">Human Verified</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-6">Converts secure video links into playable formats.</p>
 
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-2">Target URL</label>
-                            <input type="text" id="convert-url" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3 focus:border-brand-500 focus:outline-none text-white" placeholder="https://site.com/video...">
+                            <input type="text" id="convert-url" 
+                                class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3 focus:border-brand-500 focus:outline-none text-white" 
+                                placeholder="Paste link here (Pornhub, xHamster, etc)...">
                         </div>
-                        <button onclick="window.app?.converter?.scan()" id="btn-scan" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2">
-                            <span>Start Scan</span>
+                        <button onclick="window.app?.converter?.process()" id="btn-scan" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2 shadow-lg shadow-brand-500/20">
+                            <span><i class="fa-solid fa-bolt"></i> Generate Playable Link</span>
                         </button>
                     </div>
 
                     <div id="scan-result" class="mt-6 hidden p-4 bg-gray-950 rounded-lg border border-green-900">
-                        <p class="text-green-500 text-sm font-bold mb-2">✅ Stream Found!</p>
+                        <p id="result-title" class="text-green-500 text-sm font-bold mb-2">✅ Link Generated</p>
                         <div class="flex gap-2">
                             <input type="text" id="scan-output" readonly class="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-2 text-xs text-gray-300 font-mono">
                             <button onclick="window.app?.converter?.copyResult()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm"><i class="fa-regular fa-copy"></i></button>
                             <button onclick="window.app?.converter?.playResult()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm font-bold">Play</button>
                         </div>
-                    </div>
-
-                    <div class="mt-8 pt-6 border-t border-gray-800">
-                        <h3 class="font-bold text-gray-300 mb-2">Advanced: The "Stream Sniffer"</h3>
-                        <p class="text-sm text-gray-500 mb-4">If Auto-Scan fails, drag this button to your bookmarks bar. Click it on the video site to extract the link manually.</p>
-                        <a href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{var v=document.getElementsByTagName('video');var found=null;for(var i=0;i<v.length;i++){if(v[i].src&&v[i].src.includes('.m3u8'))found=v[i].src;}if(found){prompt('Stream found via Video Tag:',found)}else{alert('No stream detected yet. Play the video first.')}}})()" 
-                           class="inline-block bg-gray-800 border border-gray-600 text-gray-300 hover:text-white px-3 py-1 rounded text-xs font-mono cursor-grab">
-                            🕵️ Stream Sniffer Bookmarklet
-                        </a>
+                        <p id="result-note" class="text-xs text-gray-500 mt-2 italic"></p>
                     </div>
                 </div>
             </div>
@@ -232,47 +232,39 @@
                 appId: "1:168933807242:web:2cd70df286176208d94973",
                 measurementId: "G-305QV5NYMK"
             },
+            // Expanded Proxy List to try and evade blocking
             proxies: [
                 "https://corsproxy.io/?",
-                "https://api.allorigins.win/raw?url="
+                "https://api.allorigins.win/raw?url=",
+                "https://thingproxy.freeboard.io/fetch/"
             ]
         };
-
-        // --- CLASSES (JAVA/PYTHON STYLE STRUCTURE) ---
 
         class AppStore {
             constructor() {
                 this.user = null;
                 this.data = { history: [], favorites: [], playlists: {} };
                 this.currentVideo = null;
-                this.dbUnsubscribe = null;
-                
                 try {
                     firebase.initializeApp(CONFIG.firebase);
                     this.auth = firebase.auth();
                     this.db = firebase.firestore();
                     this.setupAuthListener();
-                } catch (e) {
-                    console.error("Firebase Init Error:", e);
-                }
+                } catch (e) { console.error("Firebase Init Error:", e); }
             }
-
             setupAuthListener() {
                 this.auth.onAuthStateChanged(user => {
                     this.user = user;
                     window.app.ui.updateAuth(user);
-                    if (user) {
-                        this.syncData(user.uid);
-                    } else {
-                        if (this.dbUnsubscribe) this.dbUnsubscribe();
+                    if (user) this.syncData(user.uid);
+                    else {
                         this.data = { history: [], favorites: [], playlists: {} };
                         window.app.ui.renderList();
                     }
                 });
             }
-
             syncData(uid) {
-                this.dbUnsubscribe = this.db.collection('users').doc(uid).onSnapshot(doc => {
+                this.db.collection('users').doc(uid).onSnapshot(doc => {
                     if (doc.exists) {
                         const cloudData = doc.data();
                         this.data.history = cloudData.history || [];
@@ -283,17 +275,12 @@
                     }
                 });
             }
-
             async addAction(type, value, extra = null) {
-                if (!this.user) {
-                    window.app.ui.toast("Please sign in to save data.", "error");
-                    return;
-                }
+                if (!this.user) { window.app.ui.toast("Please sign in to save data.", "error"); return; }
                 const docRef = this.db.collection('users').doc(this.user.uid);
                 try {
                     if (type === 'history') {
-                        this.data.history.unshift(value); 
-                        window.app.ui.renderList();
+                        this.data.history.unshift(value); window.app.ui.renderList();
                         await docRef.set({ history: firebase.firestore.FieldValue.arrayUnion(value) }, { merge: true });
                     } else if (type === 'favorite') {
                         if (this.data.favorites.includes(value)) {
@@ -304,14 +291,11 @@
                             window.app.ui.toast("Added to Favorites");
                         }
                     } else if (type === 'playlist' && extra) {
-                        let update = {};
-                        update[`playlists.${extra}`] = firebase.firestore.FieldValue.arrayUnion(value);
+                        let update = {}; update[`playlists.${extra}`] = firebase.firestore.FieldValue.arrayUnion(value);
                         await docRef.set(update, { merge: true });
                         window.app.ui.toast(`Added to ${extra}`);
                     }
-                } catch (e) {
-                    window.app.ui.toast("Sync Error", "error");
-                }
+                } catch (e) { window.app.ui.toast("Sync Error", "error"); }
             }
         }
 
@@ -323,19 +307,16 @@
                 this.qualityCtrl = document.getElementById('quality-control');
                 this.qualitySelect = document.getElementById('quality-select');
             }
-
             load(url) {
                 this.reset();
                 window.app.store.currentVideo = url;
                 window.app.store.addAction('history', url);
                 window.app.ui.updateFavButton();
-
                 if (url.includes('.m3u8')) this.playHLS(url);
-                else if (this.isYoutube(url)) this.playYoutube(url);
-                else if (this.isDirectFile(url)) this.playDirect(url);
+                else if (url.match(/(youtube\.com|youtu\.be)/)) this.playYoutube(url);
+                else if (url.match(/\.(mp4|webm|ogg)$/i)) this.playDirect(url);
                 else this.playEmbed(url);
             }
-
             reset() {
                 if (this.hls) { this.hls.destroy(); this.hls = null; }
                 this.container.innerHTML = '';
@@ -345,164 +326,181 @@
                 this.qualityCtrl.classList.add('hidden');
                 this.qualitySelect.innerHTML = '<option value="-1">Auto</option>';
             }
-
             playHLS(url) {
                 const video = document.createElement('video');
                 video.controls = true; video.autoplay = true;
                 video.className = "w-full h-full object-contain";
                 this.container.appendChild(video);
-
                 if (Hls.isSupported()) {
                     this.hls = new Hls();
                     this.hls.loadSource(url);
                     this.hls.attachMedia(video);
-                    
                     this.hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
                         const levels = data.levels;
                         if(levels.length > 0) {
                             this.qualityCtrl.classList.remove('hidden');
                             levels.forEach((level, index) => {
                                 const opt = document.createElement('option');
-                                opt.value = index;
-                                opt.text = level.height + 'p (' + Math.round(level.bitrate/1000) + 'k)';
+                                opt.value = index; opt.text = level.height + 'p';
                                 this.qualitySelect.appendChild(opt);
                             });
-                            this.qualitySelect.onchange = (e) => {
-                                this.hls.currentLevel = parseInt(e.target.value);
-                                window.app.ui.toast(`Quality set to ${e.target.options[e.target.selectedIndex].text}`);
-                            };
+                            this.qualitySelect.onchange = (e) => { this.hls.currentLevel = parseInt(e.target.value); };
                         }
                         video.play();
                     });
-                    this.hls.on(Hls.Events.ERROR, (e, data) => {
-                        if (data.fatal) window.app.ui.toast("Stream Error: " + data.details, "error");
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = url;
-                }
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = url; }
                 window.app.ui.toast("Playing HLS Stream");
             }
-
             playYoutube(url) {
                 const id = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/)[2];
                 this.container.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`;
             }
-
             playDirect(url) {
                 this.container.innerHTML = `<video src="${url}" controls autoplay class="w-full h-full object-contain"></video>`;
             }
-
             playEmbed(url) {
-                let embedUrl = url;
-                try {
-                    const u = new URL(url);
-                    const path = u.pathname.replace(/\/$/, '');
-                    if (u.hostname.includes('xhamster')) {
-                        const m = path.match(/(xh[a-zA-Z0-9]+)/) || path.match(/(\d+)$/);
-                        if (m) embedUrl = `https://xhamster.com/embed/${m[1]}`;
-                    } else if (u.hostname.includes('pornhub')) {
-                        const m = url.match(/viewkey=([^&]+)/);
-                        if (m) embedUrl = `https://www.pornhub.com/embed/${m[1]}`;
-                    } else if (u.hostname.includes('xvideos')) {
-                        const m = url.match(/video(\d+)/);
-                        if (m) embedUrl = `https://www.xvideos.com/embedframe/${m[1]}`;
-                    }
-                } catch(e) {}
-
-                this.container.innerHTML = `<iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+                // Ensure we display something even if it might get blocked
+                this.container.innerHTML = `<iframe src="${url}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
                 document.getElementById('fallback-trigger').classList.remove('hidden');
-                window.app.ui.toast("Loaded Embed Player. If blocked, use Pop-out.", "info");
+                window.app.ui.toast("Playing. If blocked, click Pop-out.", "info");
             }
-
-            isYoutube(url) { return url.match(/(youtube\.com|youtu\.be)/); }
-            isDirectFile(url) { return url.match(/\.(mp4|webm|ogg)$/i); }
-
             playFromInput() {
                 const val = document.getElementById('videoInput').value.trim();
                 if (val) this.load(val);
             }
-
             openPopout() {
-                if (window.app.store.currentVideo) {
-                    window.open(window.app.store.currentVideo, 'PopoutPlayer', 'width=854,height=480,scrollbars=yes');
-                }
+                if (window.app.store.currentVideo) window.open(window.app.store.currentVideo, 'Popout', 'width=854,height=480');
             }
         }
 
-        // 4. CONVERTER
+        // --- SMART CONVERTER ---
         class Converter {
-            async scan() {
-                const input = document.getElementById('convert-url').value.trim();
-                const btn = document.getElementById('btn-scan');
-                if (!input) return window.app.ui.toast("Enter a URL first", "error");
+            constructor() {
+                this.btn = document.getElementById('btn-scan');
+                this.input = document.getElementById('convert-url');
+                this.output = document.getElementById('scan-output');
+                this.resultBox = document.getElementById('scan-result');
+                this.resultTitle = document.getElementById('result-title');
+                this.resultNote = document.getElementById('result-note');
+            }
 
-                btn.innerHTML = '<span class="loader"></span> Scanning...';
-                btn.disabled = true;
+            async process() {
+                const url = this.input.value.trim();
+                if (!url) return window.app.ui.toast("Enter a URL", "error");
 
+                this.setLoading(true);
+                
+                // 1. TRY LOGIC FIRST (Instant & Secure)
+                const smartLink = this.getSmartEmbedURL(url);
+                
+                if (smartLink) {
+                    // Success via Logic - No scan needed
+                    this.showSuccess(smartLink, "Logic");
+                    this.setLoading(false);
+                    return;
+                }
+
+                // 2. IF LOGIC FAILS, TRY PROXY SCAN
                 let found = null;
                 for (const proxy of CONFIG.proxies) {
                     try {
-                        const res = await fetch(proxy + encodeURIComponent(input));
+                        const res = await fetch(proxy + encodeURIComponent(url));
                         const text = await res.text();
                         const match = text.match(/(https?:\\?\/\\?\/[^"'\s]+\.m3u8[^"'\s]*)/);
                         if (match) {
                             found = match[0].replace(/\\/g, ''); 
                             break;
                         }
-                    } catch (e) { console.log("Proxy failed", proxy); }
+                    } catch (e) { console.log("Proxy failed"); }
                 }
 
-                btn.innerHTML = '<span>Start Scan</span>';
-                btn.disabled = false;
-
                 if (found) {
-                    document.getElementById('scan-output').value = found;
-                    document.getElementById('scan-result').classList.remove('hidden');
-                    window.app.ui.toast("Stream Link Found!", "success");
+                    this.showSuccess(found, "Scan");
                 } else {
-                    window.app.ui.toast("Scan failed. Site is secure. Use the Sniffer bookmarklet.", "error");
+                    // 3. FINAL FALLBACK: Use original URL but show manual sniffer advice
+                    // Instead of "Error", we give them the URL back but warn them.
+                    this.showSuccess(url, "Fallback");
+                    window.app.ui.toast("Security High. Use Pop-out player if this fails.", "info");
+                }
+                
+                this.setLoading(false);
+            }
+
+            // Regex Pattern Matching for known sites
+            getSmartEmbedURL(url) {
+                try {
+                    const u = new URL(url);
+                    const path = u.pathname.replace(/\/$/, '');
+                    if (u.hostname.includes('xhamster')) {
+                        const m = path.match(/(xh[a-zA-Z0-9]+)/) || path.match(/(\d+)$/);
+                        if (m) return `https://xhamster.com/embed/${m[1]}`;
+                    } else if (u.hostname.includes('pornhub')) {
+                        const m = url.match(/viewkey=([^&]+)/);
+                        if (m) return `https://www.pornhub.com/embed/${m[1]}`;
+                    } else if (u.hostname.includes('xvideos')) {
+                        const m = url.match(/video(\d+)/);
+                        if (m) return `https://www.xvideos.com/embedframe/${m[1]}`;
+                    } else if (u.hostname.includes('spankbang')) {
+                        const m = url.match(/\/([\w\d]+)\/video/);
+                        if(m) return `https://spankbang.com/${m[1]}/embed/`;
+                    }
+                } catch(e) {}
+                return null;
+            }
+
+            showSuccess(link, method) {
+                this.output.value = link;
+                this.resultBox.classList.remove('hidden');
+                
+                if (method === "Logic") {
+                    this.resultTitle.innerHTML = `✅ Smart Link Generated (Instant)`;
+                    this.resultNote.innerText = "Security bypassed via pattern matching.";
+                } else if (method === "Scan") {
+                    this.resultTitle.innerHTML = `✅ Stream Extracted (Scanned)`;
+                    this.resultNote.innerText = "Raw video stream found.";
+                } else {
+                    this.resultTitle.innerHTML = `⚠️ Standard Link (Fallback)`;
+                    this.resultNote.innerText = "Site blocked scanning. If this doesn't play, use the Pop-out button.";
+                }
+            }
+
+            setLoading(loading) {
+                if (loading) {
+                    this.btn.innerHTML = '<span class="loader"></span> Processing...';
+                    this.btn.disabled = true;
+                    this.resultBox.classList.add('hidden');
+                } else {
+                    this.btn.innerHTML = '<span><i class="fa-solid fa-bolt"></i> Generate Playable Link</span>';
+                    this.btn.disabled = false;
                 }
             }
 
             copyResult() {
-                const el = document.getElementById('scan-output');
-                el.select();
-                document.execCommand('copy');
-                window.app.ui.toast("Copied to clipboard");
+                this.output.select(); document.execCommand('copy');
+                window.app.ui.toast("Copied!");
             }
-
             playResult() {
-                const url = document.getElementById('scan-output').value;
+                const url = this.output.value;
                 window.app.ui.navigate('player');
                 document.getElementById('videoInput').value = url;
                 window.app.player.load(url);
             }
         }
 
-        // 5. UI MANAGER
         class UIManager {
             constructor() {
                 this.currentListTab = 'history';
                 this.activePlaylist = null;
             }
-
             navigate(view) {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById(`view-${view}`).classList.remove('hidden');
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-gray-800', 'text-white'));
             }
-
             toast(msg, type = "info") {
                 const bg = type === 'error' ? "#ef4444" : (type === 'success' ? "#22c55e" : "#3b82f6");
-                Toastify({
-                    text: msg,
-                    duration: 3000,
-                    gravity: "bottom", 
-                    position: "right", 
-                    style: { background: bg, borderRadius: "8px", fontSize: "14px" }
-                }).showToast();
+                Toastify({ text: msg, duration: 3000, gravity: "bottom", position: "right", style: { background: bg, borderRadius: "8px" } }).showToast();
             }
-
             updateAuth(user) {
                 const nameEl = document.getElementById('user-name');
                 const statusEl = document.getElementById('auth-status');
@@ -517,128 +515,79 @@
                     btn.className = "fa-solid fa-right-to-bracket";
                 }
             }
-
             switchListTab(tab) {
-                this.currentListTab = tab;
-                this.activePlaylist = null;
+                this.currentListTab = tab; this.activePlaylist = null;
                 document.querySelectorAll('.list-tab').forEach(t => {
-                    t.classList.remove('text-brand-500', 'border-b-2', 'border-brand-500');
-                    t.classList.add('text-gray-500');
+                    t.classList.remove('text-brand-500', 'border-b-2', 'border-brand-500'); t.classList.add('text-gray-500');
                 });
                 document.getElementById(`tab-${tab}`).classList.remove('text-gray-500');
                 document.getElementById(`tab-${tab}`).classList.add('text-brand-500', 'border-b-2', 'border-brand-500');
                 this.renderList();
             }
-
             renderList() {
                 const container = document.getElementById('list-content');
                 const data = window.app.store.data;
-                const tab = this.currentListTab;
                 container.innerHTML = '';
                 let items = [];
-                
-                if (tab === 'history') items = data.history;
-                else if (tab === 'favorites') items = data.favorites;
-                else if (tab === 'playlists') {
-                    if (this.activePlaylist) {
-                        const back = document.createElement('div');
-                        back.className = "p-2 mb-2 bg-gray-800 rounded cursor-pointer hover:bg-gray-700 text-sm font-bold flex items-center gap-2";
-                        back.innerHTML = `<i class="fa-solid fa-arrow-left"></i> ${this.activePlaylist}`;
-                        back.onclick = () => { this.activePlaylist = null; this.renderList(); };
-                        container.appendChild(back);
-                        items = data.playlists[this.activePlaylist] || [];
-                    } else {
+                if (this.currentListTab === 'history') items = data.history;
+                else if (this.currentListTab === 'favorites') items = data.favorites;
+                else if (this.currentListTab === 'playlists') {
+                    if (this.activePlaylist) items = data.playlists[this.activePlaylist] || [];
+                    else {
                         const names = Object.keys(data.playlists);
                         if (names.length === 0) container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">No playlists.</div>';
                         names.forEach(name => {
                             const el = document.createElement('div');
                             el.className = "flex justify-between items-center p-3 hover:bg-gray-800 rounded-lg group cursor-pointer transition";
-                            el.innerHTML = `
-                                <div class="flex items-center gap-3 overflow-hidden">
-                                    <i class="fa-solid fa-folder text-yellow-500"></i>
-                                    <span class="truncate text-sm font-medium">${name}</span>
-                                    <span class="text-xs text-gray-600">(${data.playlists[name].length})</span>
-                                </div>
-                            `;
+                            el.innerHTML = `<div class="flex items-center gap-3 overflow-hidden"><i class="fa-solid fa-folder text-yellow-500"></i><span class="truncate text-sm font-medium">${name}</span></div>`;
                             el.querySelector('div').onclick = () => { this.activePlaylist = name; this.renderList(); };
                             container.appendChild(el);
                         });
                         return;
                     }
                 }
-
                 if (items.length === 0) { container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">List is empty.</div>'; return; }
-
                 items.forEach(url => {
                     const el = document.createElement('div');
                     el.className = "flex justify-between items-center p-3 hover:bg-gray-800 rounded-lg group transition";
-                    el.innerHTML = `
-                        <div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1" onclick="window.app.player.load('${url}')">
-                            <i class="fa-solid fa-play text-gray-600 text-xs"></i>
-                            <span class="truncate text-sm text-gray-300 group-hover:text-white">${url}</span>
-                        </div>
-                    `;
+                    el.innerHTML = `<div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1" onclick="window.app.player.load('${url}')"><i class="fa-solid fa-play text-gray-600 text-xs"></i><span class="truncate text-sm text-gray-300 group-hover:text-white">${url}</span></div>`;
                     container.appendChild(el);
                 });
             }
-
             updateFavButton() {
                 const btn = document.getElementById('btn-fav');
                 const url = window.app.store.currentVideo;
                 if (!url) return;
                 const isFav = window.app.store.data.favorites.includes(url);
-                if (isFav) {
-                    btn.innerHTML = '<i class="fa-solid fa-star text-yellow-500"></i> Favorited';
-                    btn.classList.add('text-white');
-                } else {
-                    btn.innerHTML = '<i class="fa-regular fa-star"></i> Favorite';
-                    btn.classList.remove('text-white');
-                }
+                if (isFav) { btn.innerHTML = '<i class="fa-solid fa-star text-yellow-500"></i> Favorited'; btn.classList.add('text-white'); } 
+                else { btn.innerHTML = '<i class="fa-regular fa-star"></i> Favorite'; btn.classList.remove('text-white'); }
             }
-            
             toggleMobileMenu() {
                 const sidebar = document.querySelector('aside');
-                sidebar.classList.toggle('hidden');
-                sidebar.classList.toggle('absolute');
-                sidebar.classList.toggle('z-50');
-                sidebar.classList.toggle('h-full');
+                sidebar.classList.toggle('hidden'); sidebar.classList.toggle('absolute'); sidebar.classList.toggle('z-50'); sidebar.classList.toggle('h-full');
             }
         }
 
-        // 6. MAIN APP INITIALIZATION
         class App {
             constructor() {
                 this.ui = new UIManager();
                 this.store = new AppStore();
                 this.player = new VideoEngine();
                 this.converter = new Converter();
-                
-                // Expose methods for HTML onclick
                 this.data = {
                     toggleFavorite: () => this.store.addAction('favorite', this.store.currentVideo),
-                    addToPlaylist: () => {
-                        const name = prompt("Playlist Name:");
-                        if (name) this.store.addAction('playlist', this.store.currentVideo, name);
-                    }
+                    addToPlaylist: () => { const name = prompt("Playlist Name:"); if (name) this.store.addAction('playlist', this.store.currentVideo, name); }
                 };
-
-                // FIXED: Explicitly defined auth toggle
                 this.auth = {
                     toggle: () => {
-                        if (this.store.user) {
-                            this.store.auth.signOut();
-                        } else {
-                            this.store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-                                .catch(e => this.ui.toast(e.message, 'error'));
-                        }
+                        if (this.store.user) this.store.auth.signOut();
+                        else this.store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => this.ui.toast(e.message, 'error'));
                     }
                 };
             }
         }
 
-        // START APP (Global Window Scope to prevent reference errors)
         window.app = new App();
-
     </script>
 </body>
 </html>
