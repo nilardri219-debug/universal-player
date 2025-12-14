@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
+    
+    <!-- SPEED BOOST: Pre-connect to YouTube servers to reduce lag -->
+    <link rel="preconnect" href="https://www.youtube-nocookie.com">
+    <link rel="preconnect" href="https://www.google.com">
+    <link rel="preconnect" href="https://googleads.g.doubleclick.net">
+    
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -221,7 +227,7 @@
 
     <h1>Cloud Player</h1>
     <div class="input-group">
-        <input type="text" id="videoLink" placeholder="Paste YouTube link or Direct MP4 URL here...">
+        <input type="text" id="videoLink" placeholder="Paste ANY video link (Embed URLs work best)...">
         <button class="play-btn" onclick="playVideo()">Play</button>
     </div>
     
@@ -247,7 +253,6 @@
 
 <script>
     // --- 1. FIREBASE CONFIGURATION ---
-    // Using the keys you provided
     const firebaseConfig = {
         apiKey: "AIzaSyAHAkFmBFw4hPcYq5lJbJoLS4jlcEDcTbk",
         authDomain: "cloud-player-8c1b9.firebaseapp.com",
@@ -272,10 +277,8 @@
         updateAuthUI(user);
         
         if (user) {
-            // User is signed in, start listening to their database
             subscribeToHistory(user.uid);
         } else {
-            // User logged out, clear UI
             if (historyUnsubscribe) historyUnsubscribe();
             renderHistoryList([]);
             document.getElementById('history-list').innerHTML = 
@@ -331,7 +334,7 @@
     }
 
     function addToHistory(url) {
-        if (!currentUser) return; // Only save if logged in
+        if (!currentUser) return; 
 
         const userDoc = db.collection('users').doc(currentUser.uid);
         
@@ -342,11 +345,8 @@
                 history = doc.data().history || [];
             }
             
-            // Remove duplicate to move to top
             history = history.filter(item => item !== url);
-            // Add to top
             history.unshift(url);
-            // Limit to 50 items
             if (history.length > 50) history.pop();
 
             transaction.set(userDoc, { history: history }, { merge: true });
@@ -382,7 +382,6 @@
         history.forEach(url => {
             const li = document.createElement('li');
             
-            // Link
             const linkSpan = document.createElement('span');
             linkSpan.className = 'history-link';
             linkSpan.textContent = url;
@@ -392,7 +391,6 @@
                 addToHistory(url);
             };
 
-            // Delete Button
             const delBtn = document.createElement('span');
             delBtn.className = 'delete-btn';
             delBtn.textContent = '✕';
@@ -425,35 +423,92 @@
         wrapper.style.display = 'none';
         statusMsg.style.display = 'none';
 
+        // 1. SMART AUTO-CONVERT (Fixes "No Embed Option" issue)
+        // If you paste a normal page link, this converts it to an embed link.
+        const smartEmbed = getSmartEmbedURL(url);
+        if (smartEmbed) {
+            wrapper.style.display = 'block';
+            wrapper.innerHTML = `
+                <iframe 
+                    src="${smartEmbed}" 
+                    frameborder="0" 
+                    loading="eager"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    referrerpolicy="no-referrer">
+                </iframe>`;
+            showStatus("Auto-converted to embed mode.", "info");
+            return true;
+        }
+
         const youtubeId = getYouTubeID(url);
 
         if (youtubeId) {
+            // 2. YouTube
             wrapper.style.display = 'block';
-            // Added privacy mode and referrerpolicy to help with embedding
             wrapper.innerHTML = `
                 <iframe 
                     src="https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1" 
                     title="YouTube video player"
                     frameborder="0"
+                    loading="eager"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen
                     referrerpolicy="strict-origin-when-cross-origin">
                 </iframe>`;
             return true;
         } 
-        else if (url.match(/\.(mp4|webm|ogg)$/i) || url.includes('blob:')) {
+        // 3. Direct Files (Updated regex to handle ?token=123 queries)
+        else if (url.match(/\.(mp4|webm|ogg)($|\?)/i) || url.includes('blob:')) {
             wrapper.style.display = 'block';
             wrapper.innerHTML = `
-                <video controls autoplay>
+                <video controls autoplay preload="auto">
                     <source src="${url}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>`;
             return true;
         } 
         else {
-            showStatus("Unsupported link format. Try a YouTube link or direct MP4.", "error");
-            return false;
+            // 4. Universal Fallback
+            wrapper.style.display = 'block';
+            wrapper.innerHTML = `
+                <iframe 
+                    src="${url}" 
+                    frameborder="0" 
+                    loading="eager"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    referrerpolicy="no-referrer">
+                </iframe>`;
+            showStatus("Attempting to load generic link.", "info");
+            return true;
         }
+    }
+
+    // --- HELPER FUNCTIONS ---
+
+    function getSmartEmbedURL(url) {
+        // Pornhub: view_video.php?viewkey=... -> /embed/...
+        if (url.includes('pornhub.com/view_video.php')) {
+            const viewKey = url.match(/viewkey=([^&]+)/);
+            if (viewKey && viewKey[1]) return `https://www.pornhub.com/embed/${viewKey[1]}`;
+        }
+        // XHamster: /videos/video-name-123 -> /embed/123
+        if (url.includes('xhamster.com/videos/')) {
+            const id = url.match(/xhamster\.com\/videos\/(?:.*-)?(\d+)$/);
+            if (id && id[1]) return `https://xhamster.com/embed/${id[1]}`;
+        }
+        // XVideos: /video123/name -> /embedframe/123
+        if (url.includes('xvideos.com/video')) {
+            const id = url.match(/xvideos\.com\/video(\d+)/);
+            if (id && id[1]) return `https://www.xvideos.com/embedframe/${id[1]}`;
+        }
+        // SpankBang: /123/video/name -> /123/embed/
+        if (url.includes('spankbang.com')) {
+            const match = url.match(/spankbang\.com\/([\w\d]+)\/video/);
+            if (match && match[1]) return `https://spankbang.com/${match[1]}/embed/`;
+        }
+        return null;
     }
 
     function getYouTubeID(url) {
@@ -470,6 +525,3 @@
         setTimeout(() => { el.style.display = 'none'; }, 5000);
     }
 </script>
-
-</body>
-</html>
