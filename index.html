@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
     
-    <!-- SPEED BOOST: Pre-connect -->
+    <!-- NUCLEAR OPTION: Global Referrer Hide -->
+    <meta name="referrer" content="no-referrer">
+    
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
     
@@ -35,225 +37,115 @@
 
         /* --- Auth Header --- */
         .auth-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #444;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #444;
         }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #555;
-            display: none;
-        }
-
-        .user-name {
-            font-size: 14px;
-            color: #ccc;
-        }
-
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #555; display: none; }
+        .user-name { font-size: 14px; color: #ccc; }
         .btn-auth {
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            transition: background 0.2s;
+            background-color: #4285F4; color: white; border: none; padding: 8px 16px;
+            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s;
         }
-
         .btn-auth:hover { background-color: #3367d6; }
         .btn-logout { background-color: #555; }
-        .btn-logout:hover { background-color: #666; }
 
-        /* --- Player Controls --- */
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
+        /* --- Input & Player --- */
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
         input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #333;
-            color: white;
-            font-size: 16px;
+            flex: 1; padding: 12px; border-radius: 5px; border: 1px solid #444;
+            background: #333; color: white; font-size: 16px;
         }
-
         button.play-btn {
-            padding: 12px 24px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 12px 24px; background-color: #007bff; color: white; border: none;
+            border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;
         }
-
         button.play-btn:hover { background-color: #0056b3; }
 
         #player-wrapper {
-            width: 100%;
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            display: none;
-            margin-bottom: 15px;
+            width: 100%; position: relative; padding-bottom: 56.25%; height: 0;
+            background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 15px;
         }
-
-        #player-wrapper iframe, 
-        #player-wrapper video {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%; border: none;
+        #player-wrapper iframe, #player-wrapper video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
         }
         
-        /* Pop-out / Fallback Controls */
-        #fallback-container {
-            display: none;
-            margin-bottom: 25px;
-            background: #3a3a3a;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 5px solid #d9534f;
-            text-align: left;
-            animation: fadeIn 0.5s;
+        /* --- Video Actions (New) --- */
+        .video-actions {
+            display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; display: none;
         }
+        .action-btn {
+            background: #444; color: white; border: none; padding: 8px 15px;
+            border-radius: 20px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px;
+            transition: 0.2s;
+        }
+        .action-btn:hover { background: #555; }
+        .action-btn.active { background: #ffc107; color: #000; } 
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* --- Tabs --- */
+        .tabs {
+            display: flex; border-bottom: 1px solid #444; margin-bottom: 10px;
         }
+        .tab-btn {
+            flex: 1; background: none; border: none; padding: 10px; color: #888;
+            cursor: pointer; font-size: 15px; border-bottom: 2px solid transparent;
+        }
+        .tab-btn:hover { color: #ddd; }
+        .tab-btn.active { color: white; border-bottom: 2px solid #007bff; font-weight: bold; }
+
+        /* --- Lists --- */
+        #list-container {
+            list-style: none; padding: 0; margin: 0;
+            max-height: 300px; overflow-y: auto; text-align: left;
+        }
+        .list-item {
+            padding: 10px; border-bottom: 1px solid #333; background: #2d2d2d;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.1s;
+        }
+        .list-item:hover { background: #383838; }
         
-        .fallback-text {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 15px;
-            color: #fff;
+        .item-text {
+            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-right: 15px; flex-grow: 1; color: #eee; font-size: 14px;
         }
+        .item-text:hover { text-decoration: underline; color: #fff; }
 
-        .popout-btn {
-            background: #d9534f; /* Red for visibility */
-            color: white;
-            text-decoration: none;
-            padding: 12px 24px;
-            font-size: 15px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            display: inline-block;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-        }
-        .popout-btn:hover { 
-            background: #c9302c; 
-            transform: scale(1.02);
-        }
+        .item-meta { font-size: 12px; color: #666; margin-right: 10px; }
 
-        .status-msg {
-            margin-top: 10px;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-            font-size: 14px;
-        }
-        .error { background: #d9534f; color: white; }
-        .info { background: #17a2b8; color: white; }
+        .icon-btn { cursor: pointer; padding: 4px; color: #888; font-size: 16px; }
+        .icon-btn:hover { color: #fff; }
+        .delete-btn:hover { color: #ff6b6b; }
 
-        /* --- History Section --- */
-        .history-section {
-            border-top: 1px solid #444;
-            padding-top: 20px;
-            text-align: left;
+        /* Playlist Folder Style */
+        .playlist-folder {
+            display: flex; align-items: center; gap: 10px; font-weight: bold; color: #8ab4f8;
         }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .back-btn {
+            width: 100%; text-align: left; background: #333; border: none; color: white;
+            padding: 8px; cursor: pointer; margin-bottom: 5px; border-radius: 4px;
         }
+        .back-btn:hover { background: #444; }
 
-        .clear-btn {
-            background: #d9534f;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            opacity: 0; /* Hidden by default */
-            pointer-events: none;
-        }
-        .clear-btn.visible { opacity: 1; pointer-events: auto; }
-
-        #history-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 250px;
-            overflow-y: auto;
-            border: 1px solid #444;
-            border-radius: 5px;
-        }
-
-        #history-list li {
-            padding: 10px;
-            border-bottom: 1px solid #444;
+        /* Fallback */
+        #fallback-container { 
+            display: none; 
+            margin-bottom: 20px; 
+            text-align: center; 
             background: #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
         }
-
-        #history-list li:hover { background: #444; }
+        .popout-btn {
+            background: #d9534f; color: white; padding: 10px 20px; border-radius: 4px;
+            border: none; cursor: pointer; font-weight: bold; margin-top: 5px;
+        }
+        .popout-btn:hover { background: #c9302c; }
         
-        .history-link {
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-right: 15px;
-            flex-grow: 1;
-            color: #fff;
-        }
-        
-        .history-link:hover { text-decoration: underline; }
-
-        .delete-btn {
-            color: #ff6b6b;
-            font-weight: bold;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .empty-state {
-            padding: 20px;
-            text-align: center;
-            color: #888;
-            font-style: italic;
-        }
+        .status-msg { margin: 10px 0; padding: 10px; border-radius: 5px; display: none; font-size: 14px; }
+        .info { background: #17a2b8; } .error { background: #d9534f; }
+        .empty-state { padding: 20px; text-align: center; color: #777; font-style: italic; }
     </style>
 </head>
 <body>
@@ -267,9 +159,8 @@
         <button id="authBtn" class="btn-auth" onclick="handleAuth()">Sign in with Google</button>
     </div>
 
-    <h1>Cloud Player</h1>
     <div class="input-group">
-        <input type="text" id="videoLink" placeholder="Paste ANY video link...">
+        <input type="text" id="videoLink" placeholder="Paste video link...">
         <button class="play-btn" onclick="playVideo()">Play</button>
     </div>
     
@@ -277,22 +168,34 @@
 
     <div id="player-wrapper"></div>
     
-    <!-- Robust Fallback Section -->
-    <div id="fallback-container">
-        <span class="fallback-text">
-            <strong>Video blocked?</strong> This site is blocking the player window.
-            <br>Click the red button to open it in a secure pop-up mode.
-        </span>
-        <button id="popout-btn" class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
+    <!-- Action Buttons (Star / Add to Playlist) -->
+    <div id="videoActions" class="video-actions">
+        <button id="btnFav" class="action-btn" onclick="toggleFavorite()">
+            <span>⭐</span> Favorite
+        </button>
+        <button class="action-btn" onclick="addToPlaylist()">
+            <span>📂</span> Add to Playlist
+        </button>
     </div>
 
-    <div class="history-section">
-        <div class="history-header">
-            <h3>Watch History</h3>
-            <button id="clearBtn" class="clear-btn" onclick="clearHistory()">Clear All</button>
-        </div>
-        <ul id="history-list">
-            <li class="empty-state">Sign in to sync your history across devices.</li>
+    <div id="fallback-container">
+        <p style="margin:0 0 8px 0; color:#ddd; font-size:14px;">
+            <strong>Video Blocked?</strong> Use the secure Pop-out player.
+        </p>
+        <button class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('history')" id="tab-history">History</button>
+        <button class="tab-btn" onclick="switchTab('favorites')" id="tab-favorites">Favorites</button>
+        <button class="tab-btn" onclick="switchTab('playlists')" id="tab-playlists">Playlists</button>
+    </div>
+
+    <!-- Content List -->
+    <div id="list-view-area">
+        <ul id="list-container">
+            <li class="empty-state">Sign in to view your data.</li>
         </ul>
     </div>
 </div>
@@ -303,7 +206,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-    // --- 1. FIREBASE CONFIGURATION ---
+    // --- 1. CONFIGURATION ---
     const firebaseConfig = {
         apiKey: "AIzaSyAHAkFmBFw4hPcYq5lJbJoLS4jlcEDcTbk",
         authDomain: "cloud-player-8c1b9.firebaseapp.com",
@@ -314,299 +217,363 @@
         measurementId: "G-305QV5NYMK"
     };
 
-    // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // State
     let currentUser = null;
-    let historyUnsubscribe = null;
-    let currentVideoUrl = ""; // Store for popup player
+    let userData = { history: [], favorites: [], playlists: {} }; // Local mirror of data
+    let currentTab = 'history'; 
+    let activePlaylist = null; // Name of playlist currently viewing
+    let currentVideoUrl = ""; 
+    let currentEmbedUrl = ""; // Specifically for the popout
+    let unsubscribe = null;
 
-    // --- 2. AUTHENTICATION LOGIC ---
+    // --- 2. AUTHENTICATION ---
     auth.onAuthStateChanged((user) => {
         currentUser = user;
         updateAuthUI(user);
         
         if (user) {
-            subscribeToHistory(user.uid);
+            subscribeToData(user.uid);
         } else {
-            if (historyUnsubscribe) historyUnsubscribe();
-            renderHistoryList([]);
-            document.getElementById('history-list').innerHTML = 
-                '<li class="empty-state">Sign in to sync your history.</li>';
+            if (unsubscribe) unsubscribe();
+            userData = { history: [], favorites: [], playlists: {} };
+            renderList();
         }
     });
 
     function handleAuth() {
-        if (currentUser) {
-            auth.signOut();
-        } else {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch((error) => {
-                console.error("Auth Error:", error);
-                showStatus(error.message, 'error');
-            });
-        }
+        if (currentUser) auth.signOut();
+        else auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => showStatus(e.message, 'error'));
     }
 
     function updateAuthUI(user) {
-        const authBtn = document.getElementById('authBtn');
-        const userName = document.getElementById('userName');
-        const userAvatar = document.getElementById('userAvatar');
-        const clearBtn = document.getElementById('clearBtn');
-
+        const btn = document.getElementById('authBtn');
+        const name = document.getElementById('userName');
+        const avatar = document.getElementById('userAvatar');
         if (user) {
-            authBtn.textContent = 'Sign Out';
-            authBtn.classList.add('btn-logout');
-            userName.textContent = user.displayName;
-            userAvatar.src = user.photoURL;
-            userAvatar.style.display = 'block';
-            clearBtn.classList.add('visible');
+            btn.textContent = 'Sign Out'; btn.classList.add('btn-logout');
+            name.textContent = user.displayName; avatar.src = user.photoURL; avatar.style.display = 'block';
         } else {
-            authBtn.textContent = 'Sign in with Google';
-            authBtn.classList.remove('btn-logout');
-            userName.textContent = 'Not signed in';
-            userAvatar.style.display = 'none';
-            clearBtn.classList.remove('visible');
+            btn.textContent = 'Sign in'; btn.classList.remove('btn-logout');
+            name.textContent = 'Not signed in'; avatar.style.display = 'none';
         }
     }
 
-    // --- 3. DATABASE LOGIC ---
-    function subscribeToHistory(uid) {
-        const userDoc = db.collection('users').doc(uid);
-
-        historyUnsubscribe = userDoc.onSnapshot((doc) => {
-            if (doc.exists && doc.data().history) {
-                renderHistoryList(doc.data().history);
-            } else {
-                renderHistoryList([]); // No history yet
-            }
-        });
-    }
-
-    function addToHistory(url) {
-        if (!currentUser) return; 
-
-        const userDoc = db.collection('users').doc(currentUser.uid);
-        
-        db.runTransaction(async (transaction) => {
-            const doc = await transaction.get(userDoc);
-            let history = [];
+    // --- 3. DATA LOGIC ---
+    function subscribeToData(uid) {
+        const docRef = db.collection('users').doc(uid);
+        unsubscribe = docRef.onSnapshot((doc) => {
             if (doc.exists) {
-                history = doc.data().history || [];
+                const data = doc.data();
+                userData.history = data.history || [];
+                userData.favorites = data.favorites || [];
+                userData.playlists = data.playlists || {};
             }
-            
-            history = history.filter(item => item !== url);
-            history.unshift(url);
-            if (history.length > 50) history.pop();
-
-            transaction.set(userDoc, { history: history }, { merge: true });
+            renderList();
+            updateFavBtnState();
         });
     }
 
-    function deleteHistoryItem(urlToDelete) {
-        if (!currentUser) return;
-        const userDoc = db.collection('users').doc(currentUser.uid);
-        userDoc.update({
-            history: firebase.firestore.FieldValue.arrayRemove(urlToDelete)
-        });
+    // --- 4. TABS & RENDERING ---
+    function switchTab(tab) {
+        currentTab = tab;
+        activePlaylist = null; // Reset playlist view when switching tabs
+        
+        // Update UI classes
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        
+        renderList();
     }
 
-    function clearHistory() {
-        if (!currentUser) return;
-        if (confirm('Are you sure you want to delete all history?')) {
-            const userDoc = db.collection('users').doc(currentUser.uid);
-            userDoc.set({ history: [] });
-        }
-    }
-
-    // --- 4. UI & PLAYER LOGIC ---
-    function renderHistoryList(history) {
-        const list = document.getElementById('history-list');
+    function renderList() {
+        const list = document.getElementById('list-container');
         list.innerHTML = '';
-
-        if (history.length === 0) {
-            list.innerHTML = '<li class="empty-state">No history yet. Watch a video!</li>';
+        
+        if (!currentUser) {
+            list.innerHTML = '<li class="empty-state">Sign in to sync your data.</li>';
             return;
         }
 
-        history.forEach(url => {
-            const li = document.createElement('li');
-            
-            const linkSpan = document.createElement('span');
-            linkSpan.className = 'history-link';
-            linkSpan.textContent = url;
-            linkSpan.onclick = () => {
-                document.getElementById('videoLink').value = url;
-                loadPlayer(url);
-                addToHistory(url);
-            };
+        // VIEW: HISTORY
+        if (currentTab === 'history') {
+            if (userData.history.length === 0) {
+                list.innerHTML = '<li class="empty-state">No history yet.</li>'; return;
+            }
+            userData.history.forEach(url => {
+                list.appendChild(createListItem(url, 'history'));
+            });
+        }
+        
+        // VIEW: FAVORITES
+        else if (currentTab === 'favorites') {
+            if (userData.favorites.length === 0) {
+                list.innerHTML = '<li class="empty-state">No favorites yet.</li>'; return;
+            }
+            userData.favorites.forEach(url => {
+                list.appendChild(createListItem(url, 'favorites'));
+            });
+        }
+        
+        // VIEW: PLAYLISTS
+        else if (currentTab === 'playlists') {
+            if (activePlaylist) {
+                const videos = userData.playlists[activePlaylist] || [];
+                const backBtn = document.createElement('button');
+                backBtn.className = 'back-btn';
+                backBtn.innerHTML = `⬅ Back to Playlists`;
+                backBtn.onclick = () => { activePlaylist = null; renderList(); };
+                list.appendChild(backBtn);
 
-            const delBtn = document.createElement('span');
-            delBtn.className = 'delete-btn';
-            delBtn.textContent = '✕';
-            delBtn.title = 'Remove from cloud';
-            delBtn.onclick = (e) => {
-                e.stopPropagation();
-                deleteHistoryItem(url);
-            };
+                const title = document.createElement('h3');
+                title.style.margin = '10px 0';
+                title.style.color = '#8ab4f8';
+                title.textContent = `📂 ${activePlaylist}`;
+                list.appendChild(title);
 
-            li.appendChild(linkSpan);
-            li.appendChild(delBtn);
-            list.appendChild(li);
+                if(videos.length === 0) {
+                    const li = document.createElement('li');
+                    li.className = 'empty-state';
+                    li.textContent = 'Empty playlist.';
+                    list.appendChild(li);
+                } else {
+                    videos.forEach(url => {
+                        list.appendChild(createListItem(url, 'playlist', activePlaylist));
+                    });
+                }
+            } else {
+                const names = Object.keys(userData.playlists);
+                if (names.length === 0) {
+                    list.innerHTML = '<li class="empty-state">No playlists.</li>'; return;
+                }
+                names.forEach(name => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `
+                        <div class="playlist-folder" onclick="openPlaylist('${name}')" style="cursor:pointer; flex:1;">
+                            <span>📂</span> ${name} <span class="item-meta">(${userData.playlists[name].length})</span>
+                        </div>
+                        <span class="icon-btn delete-btn" onclick="deletePlaylist('${name}')">✕</span>
+                    `;
+                    list.appendChild(li);
+                });
+            }
+        }
+    }
+
+    function createListItem(url, type, playlistName = null) {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+        
+        li.innerHTML = `
+            <span class="item-text" onclick="playSavedUrl('${url}')">${url}</span>
+            <span class="icon-btn delete-btn" title="Remove">✕</span>
+        `;
+        
+        li.querySelector('.delete-btn').onclick = (e) => {
+            e.stopPropagation();
+            if (type === 'history') removeFromHistory(url);
+            if (type === 'favorites') toggleFavorite(url); 
+            if (type === 'playlist') removeFromPlaylist(url, playlistName);
+        };
+        
+        return li;
+    }
+
+    function openPlaylist(name) {
+        activePlaylist = name;
+        renderList();
+    }
+
+    // --- 5. ACTIONS ---
+    function toggleFavorite(targetUrl = null) {
+        if (!currentUser) return alert("Please sign in first.");
+        const url = targetUrl || currentVideoUrl;
+        if (!url) return;
+
+        const docRef = db.collection('users').doc(currentUser.uid);
+        const isFav = userData.favorites.includes(url);
+
+        if (isFav) {
+            docRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(url) });
+        } else {
+            docRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(url) });
+        }
+    }
+
+    function addToPlaylist() {
+        if (!currentUser) return alert("Please sign in first.");
+        if (!currentVideoUrl) return alert("Play a video first.");
+
+        const playlistName = prompt("Enter Playlist Name:", "My Playlist");
+        if (!playlistName) return;
+
+        const safeName = playlistName.trim().replace('.', '');
+        if (!safeName) return;
+
+        const docRef = db.collection('users').doc(currentUser.uid);
+        let updateData = {};
+        updateData[`playlists.${safeName}`] = firebase.firestore.FieldValue.arrayUnion(currentVideoUrl);
+
+        docRef.update(updateData)
+            .then(() => {
+                showStatus(`Added to "${safeName}"`, 'info');
+                if(currentTab !== 'playlists') switchTab('playlists');
+            })
+            .catch(e => {
+                docRef.set(updateData, { merge: true });
+            });
+    }
+
+    function removeFromHistory(url) {
+        db.collection('users').doc(currentUser.uid).update({
+            history: firebase.firestore.FieldValue.arrayRemove(url)
         });
     }
 
+    function removeFromPlaylist(url, playlistName) {
+        let updateData = {};
+        updateData[`playlists.${playlistName}`] = firebase.firestore.FieldValue.arrayRemove(url);
+        db.collection('users').doc(currentUser.uid).update(updateData);
+    }
+
+    function deletePlaylist(name) {
+        if(!confirm(`Delete playlist "${name}"?`)) return;
+        let updateData = {};
+        updateData[`playlists.${name}`] = firebase.firestore.FieldValue.delete();
+        db.collection('users').doc(currentUser.uid).update(updateData);
+    }
+
+    function updateFavBtnState() {
+        const btn = document.getElementById('btnFav');
+        const container = document.getElementById('videoActions');
+        
+        if (!currentVideoUrl) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = 'flex';
+
+        if (userData.favorites.includes(currentVideoUrl)) {
+            btn.classList.add('active');
+            btn.innerHTML = '<span>⭐</span> Favorited';
+        } else {
+            btn.classList.remove('active');
+            btn.innerHTML = '<span>☆</span> Favorite';
+        }
+    }
+
+    // --- 6. PLAYER LOGIC ---
     function playVideo() {
         const url = document.getElementById('videoLink').value.trim();
         if (url) {
-            if (loadPlayer(url)) {
-                addToHistory(url);
+            loadPlayer(url);
+            if (currentUser) {
+                 const docRef = db.collection('users').doc(currentUser.uid);
+                 docRef.set({
+                     history: firebase.firestore.FieldValue.arrayUnion(url)
+                 }, { merge: true });
             }
         }
+    }
+
+    function playSavedUrl(url) {
+        document.getElementById('videoLink').value = url;
+        playVideo();
     }
 
     function loadPlayer(url) {
+        currentVideoUrl = url;
+        
         const wrapper = document.getElementById('player-wrapper');
-        const fallbackContainer = document.getElementById('fallback-container');
+        const fallback = document.getElementById('fallback-container');
         const statusMsg = document.getElementById('statusMsg');
         
-        // Reset UI
-        wrapper.innerHTML = '';
-        wrapper.style.display = 'none';
-        statusMsg.style.display = 'none';
-        fallbackContainer.style.display = 'none';
-        currentVideoUrl = url; // Save for popout
+        wrapper.innerHTML = ''; wrapper.style.display = 'none';
+        fallback.style.display = 'none'; statusMsg.style.display = 'none';
 
         // 1. YouTube
-        const youtubeId = getYouTubeID(url);
-        if (youtubeId) {
+        const ytId = getYouTubeID(url);
+        if (ytId) {
             wrapper.style.display = 'block';
-            wrapper.innerHTML = `
-                <iframe 
-                    src="https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1" 
-                    title="YouTube video player"
-                    frameborder="0"
-                    loading="eager"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>`;
-            return true;
+            wrapper.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1" frameborder="0" allowfullscreen></iframe>`;
+            updateFavBtnState();
+            return;
+        }
+        
+        // 2. Direct File
+        if (url.match(/\.(mp4|webm|ogg|m3u8)($|\?)/i)) {
+            wrapper.style.display = 'block';
+            wrapper.innerHTML = `<video controls autoplay><source src="${url}" type="video/mp4"></video>`;
+            updateFavBtnState();
+            return;
         }
 
-        // 2. Direct MP4/WebM
-        if (url.match(/\.(mp4|webm|ogg|m3u8)($|\?)/i) || url.includes('blob:')) {
-            wrapper.style.display = 'block';
-            wrapper.innerHTML = `
-                <video controls autoplay preload="auto">
-                    <source src="${url}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>`;
-            return true;
-        }
-
-        // 3. SMART EMBED CONVERTER
-        const smartEmbed = getSmartEmbedURL(url);
-        if (smartEmbed) {
-            currentVideoUrl = smartEmbed;
-            
-            wrapper.style.display = 'block';
-            // UPDATE: Removed "sandbox" (fixes cookie error) and used "no-referrer" (fixes embed block)
-            wrapper.innerHTML = `
-                <iframe 
-                    src="${smartEmbed}" 
-                    frameborder="0" 
-                    loading="eager"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    referrerpolicy="no-referrer">
-                </iframe>`;
-            
-            showStatus("Loading player...", "info");
-            
-            // Show fallback immediately for these tough sites
-            fallbackContainer.style.display = 'block';
-            return true;
-        }
-
-        // 4. Fallback
+        // 3. Smart Embed / Fallback
+        const embedUrl = getSmartEmbedURL(url) || url;
+        currentEmbedUrl = embedUrl; // Save for popout
+        
         wrapper.style.display = 'block';
+        // RESTORED SANDBOX & LOADING=EAGER
         wrapper.innerHTML = `
             <iframe 
-                src="${url}" 
+                src="${embedUrl}" 
                 frameborder="0" 
                 loading="eager"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+                allowfullscreen 
                 referrerpolicy="no-referrer">
-            </iframe>`;
-        showStatus("Loading generic link.", "info");
-        fallbackContainer.style.display = 'block';
-        return true;
+            </iframe>
+        `;
+        
+        // Show fallback button
+        fallback.style.display = 'block';
+        updateFavBtnState();
     }
 
     function openPopupPlayer() {
-        if (!currentVideoUrl) return;
-        // Open in a decent sized popup window
-        window.open(currentVideoUrl, 'VideoPlayer', 'width=854,height=480,resizable=yes,scrollbars=yes');
+        const urlToPlay = currentEmbedUrl || currentVideoUrl;
+        if(urlToPlay) window.open(urlToPlay, 'Popout', 'width=854,height=480,scrollbars=yes');
     }
-
-    // --- HELPER FUNCTIONS ---
 
     function getSmartEmbedURL(url) {
         try {
-            const urlObj = new URL(url);
-            const domain = urlObj.hostname.toLowerCase();
-            const cleanPath = urlObj.pathname.replace(/\/$/, ''); 
-
-            if (domain.includes('pornhub')) {
-                const viewKey = url.match(/viewkey=([^&]+)/);
-                if (viewKey && viewKey[1]) return `https://www.pornhub.com/embed/${viewKey[1]}`;
+            const u = new URL(url);
+            const d = u.hostname.toLowerCase();
+            const p = u.pathname.replace(/\/$/, '');
+            
+            if (d.includes('pornhub')) {
+                const k = url.match(/viewkey=([^&]+)/);
+                return k ? `https://www.pornhub.com/embed/${k[1]}` : null;
             }
-
-            if (domain.includes('xhamster')) {
-                // Aggressive ID finder: "xh" followed by Alphanumeric
-                let idMatch = cleanPath.match(/(xh[a-zA-Z0-9]+)/);
-                
-                // Fallback: Just digits at end of string
-                if (!idMatch) {
-                    idMatch = cleanPath.match(/(\d+)$/);
-                }
-
-                if (idMatch && idMatch[1]) {
-                    return `https://xhamster.com/embed/${idMatch[1]}`;
-                }
+            if (d.includes('xhamster')) {
+                let m = p.match(/(xh[a-zA-Z0-9]+)/) || p.match(/(\d+)$/);
+                return m ? `https://xhamster.com/embed/${m[1]}` : null;
             }
-
-            if (domain.includes('xvideos')) {
-                const id = url.match(/video(\d+)/);
-                if (id && id[1]) return `https://www.xvideos.com/embedframe/${id[1]}`;
+            if (d.includes('xvideos')) {
+                let m = url.match(/video(\d+)/);
+                return m ? `https://www.xvideos.com/embedframe/${m[1]}` : null;
             }
-
-            if (domain.includes('spankbang')) {
-                const match = url.match(/\/([\w\d]+)\/video/);
-                if (match && match[1]) return `https://spankbang.com/${match[1]}/embed/`;
+            if (d.includes('spankbang')) {
+                let m = url.match(/\/([\w\d]+)\/video/);
+                return m ? `https://spankbang.com/${m[1]}/embed/` : null;
             }
-
-        } catch (e) {
-            console.error("URL Parse Error", e);
-        }
+        } catch(e) {}
         return null;
     }
 
     function getYouTubeID(url) {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
+        const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+        return (m && m[2].length === 11) ? m[2] : null;
     }
 
     function showStatus(msg, type) {
         const el = document.getElementById('statusMsg');
-        el.innerText = msg;
-        el.className = 'status-msg ' + type;
-        el.style.display = 'block';
-        setTimeout(() => { el.style.display = 'none'; }, 5000);
+        el.innerText = msg; el.className = 'status-msg ' + type; el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
     }
 </script>
 </body>
