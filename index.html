@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
     
-    <!-- SPEED BOOST: Pre-connect to YouTube servers to reduce lag -->
+    <!-- NUCLEAR OPTION: Hides your website from the video player to bypass "Embedding Disabled" errors -->
+    <meta name="referrer" content="no-referrer">
+    
+    <!-- SPEED BOOST: Pre-connect to YouTube servers -->
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
-    <link rel="preconnect" href="https://googleads.g.doubleclick.net">
     
     <style>
         body {
@@ -227,7 +229,7 @@
 
     <h1>Cloud Player</h1>
     <div class="input-group">
-        <input type="text" id="videoLink" placeholder="Paste ANY video link (Embed URLs work best)...">
+        <input type="text" id="videoLink" placeholder="Paste ANY video link...">
         <button class="play-btn" onclick="playVideo()">Play</button>
     </div>
     
@@ -423,7 +425,7 @@
         wrapper.style.display = 'none';
         statusMsg.style.display = 'none';
 
-        // 1. YouTube Link Check
+        // 1. YouTube
         const youtubeId = getYouTubeID(url);
         if (youtubeId) {
             wrapper.style.display = 'block';
@@ -434,13 +436,12 @@
                     frameborder="0"
                     loading="eager"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    referrerpolicy="strict-origin-when-cross-origin">
+                    allowfullscreen>
                 </iframe>`;
             return true;
         }
 
-        // 2. Direct File Check (mp4, m3u8, etc.)
+        // 2. Direct MP4/WebM
         if (url.match(/\.(mp4|webm|ogg|m3u8)($|\?)/i) || url.includes('blob:')) {
             wrapper.style.display = 'block';
             wrapper.innerHTML = `
@@ -451,25 +452,24 @@
             return true;
         }
 
-        // 3. SMART EMBED CONVERTER (Automatic fix for security blocks)
+        // 3. SMART EMBED CONVERTER (RE-ENGINEERED)
         const smartEmbed = getSmartEmbedURL(url);
         if (smartEmbed) {
             wrapper.style.display = 'block';
-            // IMPORTANT: We use 'no-referrer' to prevent the site from blocking your 'desi' source
+            // Important: We use no-referrer and allow-scripts
             wrapper.innerHTML = `
                 <iframe 
                     src="${smartEmbed}" 
                     frameborder="0" 
                     loading="eager"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    referrerpolicy="no-referrer">
+                    allowfullscreen>
                 </iframe>`;
-            showStatus("Converted to embed player automatically.", "info");
+            showStatus("Found Embed ID. Playing...", "info");
             return true;
         }
 
-        // 4. Fallback (Just try to show the link)
+        // 4. Universal Fallback
         wrapper.style.display = 'block';
         wrapper.innerHTML = `
             <iframe 
@@ -477,10 +477,9 @@
                 frameborder="0" 
                 loading="eager"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen
-                referrerpolicy="no-referrer">
+                allowfullscreen>
             </iframe>`;
-        showStatus("Attempting to load generic link.", "info");
+        showStatus("Could not find video ID. Trying standard load...", "info");
         return true;
     }
 
@@ -489,41 +488,51 @@
     function getSmartEmbedURL(url) {
         try {
             const urlObj = new URL(url);
-            const domain = urlObj.hostname;
+            const domain = urlObj.hostname.toLowerCase();
+            const cleanPath = urlObj.pathname.replace(/\/$/, ''); // Remove trailing slash
 
-            // Pornhub: Force .com domain
+            // --- PORNHUB ---
             if (domain.includes('pornhub')) {
                 const viewKey = url.match(/viewkey=([^&]+)/);
                 if (viewKey && viewKey[1]) return `https://www.pornhub.com/embed/${viewKey[1]}`;
             }
 
-            // XHamster: Force .com domain (fixes .desi/.one blocking issues)
+            // --- XHAMSTER ---
             if (domain.includes('xhamster')) {
-                // Find ID: looks for digits at the end of the path or before '?'
-                // Handles URLs like /videos/video-name-12345?foo=bar
-                const idMatch = url.match(/(\d+)(?:$|\?|\/)/); 
-                // Fallback for more complex paths
-                const id = idMatch ? idMatch[1] : url.match(/videos\/.*?(\d+)/)?.[1];
+                // Case A: /videos/video-name-12345
+                // Matches digits at the very end of the path
+                let idMatch = cleanPath.match(/-(\d+)$/);
                 
-                // FORCE xhamster.com
-                if (id) return `https://xhamster.com/embed/${id}`;
+                // Case B: /videos/video-name-xh12345 (XH IDs)
+                if (!idMatch) {
+                     idMatch = cleanPath.match(/-((?:xh)?[a-zA-Z0-9]+)$/);
+                }
+                
+                // Fallback: Check if URL *ends* with numbers even if format is weird
+                if (!idMatch) {
+                    idMatch = cleanPath.match(/(\d+)$/);
+                }
+
+                if (idMatch && idMatch[1]) {
+                    return `https://xhamster.com/embed/${idMatch[1]}`;
+                }
             }
 
-            // XVideos
+            // --- XVIDEOS ---
             if (domain.includes('xvideos')) {
                 const id = url.match(/video(\d+)/);
                 if (id && id[1]) return `https://www.xvideos.com/embedframe/${id[1]}`;
             }
 
-            // SpankBang
+            // --- SPANKBANG ---
             if (domain.includes('spankbang')) {
+                // /12a34/video/title -> ID is 12a34
                 const match = url.match(/\/([\w\d]+)\/video/);
                 if (match && match[1]) return `https://spankbang.com/${match[1]}/embed/`;
             }
 
         } catch (e) {
             console.error("URL Parse Error", e);
-            return null;
         }
         return null;
     }
