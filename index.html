@@ -10,6 +10,9 @@
     
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
+
+    <!-- HLS.js Library for Direct Streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
         body {
@@ -51,7 +54,7 @@
         .btn-logout { background-color: #555; }
 
         /* --- Input & Player --- */
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 5px; }
         input {
             flex: 1; padding: 12px; border-radius: 5px; border: 1px solid #444;
             background: #333; color: white; font-size: 16px;
@@ -62,6 +65,29 @@
         }
         button.play-btn:hover { background-color: #0056b3; }
 
+        /* --- Stream Mode Toggle --- */
+        .mode-toggle {
+            text-align: right; margin-bottom: 20px;
+        }
+        .mode-link {
+            color: #8ab4f8; font-size: 13px; cursor: pointer; text-decoration: none; border-bottom: 1px dashed #8ab4f8;
+        }
+        .mode-link:hover { color: #fff; border-color: #fff; }
+
+        /* --- Stream Section --- */
+        #stream-section {
+            display: none; /* Hidden by default */
+            background: #383838;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid #555;
+            animation: fadeIn 0.3s;
+        }
+        #stream-section h4 { margin-top: 0; color: #28a745; margin-bottom: 5px; }
+        #stream-section p { font-size: 13px; color: #ccc; margin-bottom: 10px; line-height: 1.4; }
+
         #player-wrapper {
             width: 100%; position: relative; padding-bottom: 56.25%; height: 0;
             background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 15px;
@@ -70,7 +96,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
         }
         
-        /* --- Video Actions (New) --- */
+        /* --- Video Actions --- */
         .video-actions {
             display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; display: none;
         }
@@ -117,7 +143,6 @@
         .icon-btn:hover { color: #fff; }
         .delete-btn:hover { color: #ff6b6b; }
 
-        /* Playlist Folder Style */
         .playlist-folder {
             display: flex; align-items: center; gap: 10px; font-weight: bold; color: #8ab4f8;
         }
@@ -129,23 +154,18 @@
 
         /* Fallback */
         #fallback-container { 
-            display: none; 
-            margin-bottom: 20px; 
-            text-align: center; 
-            background: #333;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #444;
+            display: none; margin-bottom: 20px; text-align: center; background: #333; padding: 15px; border-radius: 8px; border: 1px solid #444;
         }
         .popout-btn {
-            background: #d9534f; color: white; padding: 10px 20px; border-radius: 4px;
-            border: none; cursor: pointer; font-weight: bold; margin-top: 5px;
+            background: #d9534f; color: white; padding: 12px 24px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .popout-btn:hover { background: #c9302c; }
         
         .status-msg { margin: 10px 0; padding: 10px; border-radius: 5px; display: none; font-size: 14px; }
         .info { background: #17a2b8; } .error { background: #d9534f; }
         .empty-state { padding: 20px; text-align: center; color: #777; font-style: italic; }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
@@ -159,40 +179,52 @@
         <button id="authBtn" class="btn-auth" onclick="handleAuth()">Sign in with Google</button>
     </div>
 
-    <div class="input-group">
-        <input type="text" id="videoLink" placeholder="Paste video link...">
-        <button class="play-btn" onclick="playVideo()">Play</button>
+    <!-- STANDARD PLAYER SECTION -->
+    <div id="standard-section">
+        <div class="input-group">
+            <input type="text" id="videoLink" placeholder="Paste website link (YouTube, etc.)...">
+            <button class="play-btn" onclick="playVideo()">Play</button>
+        </div>
+        <div class="mode-toggle">
+            <span class="mode-link" onclick="toggleStreamSection()">⟳ Switch to Direct Stream (.m3u8) Player</span>
+        </div>
+    </div>
+
+    <!-- DIRECT STREAM SECTION (Hidden by default) -->
+    <div id="stream-section">
+        <h4>Direct Stream Player (HLS)</h4>
+        <p>
+            Paste a <strong>.m3u8</strong> link here. This bypasses site blocking by playing the raw stream.<br>
+            <em>(Tip: Open F12 > Network tab, filter for "m3u8", and copy the URL)</em>
+        </p>
+        <div class="input-group">
+            <input type="text" id="streamLink" placeholder="https://example.com/video/master.m3u8">
+            <button class="play-btn" style="background-color: #28a745;" onclick="playStream()">Play Stream</button>
+        </div>
+        <div class="mode-toggle">
+            <span class="mode-link" onclick="toggleStreamSection()">⟲ Back to Standard Player</span>
+        </div>
     </div>
     
     <div id="statusMsg" class="status-msg"></div>
 
     <div id="player-wrapper"></div>
     
-    <!-- Action Buttons (Star / Add to Playlist) -->
     <div id="videoActions" class="video-actions">
-        <button id="btnFav" class="action-btn" onclick="toggleFavorite()">
-            <span>⭐</span> Favorite
-        </button>
-        <button class="action-btn" onclick="addToPlaylist()">
-            <span>📂</span> Add to Playlist
-        </button>
+        <button id="btnFav" class="action-btn" onclick="toggleFavorite()"><span>⭐</span> Favorite</button>
+        <button class="action-btn" onclick="addToPlaylist()"><span>📂</span> Add to Playlist</button>
     </div>
 
     <div id="fallback-container">
-        <p style="margin:0 0 8px 0; color:#ddd; font-size:14px;">
-            <strong>Video Blocked?</strong> Use the secure Pop-out player.
-        </p>
-        <button class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
+        <!-- Injected by JS -->
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('history')" id="tab-history">History</button>
         <button class="tab-btn" onclick="switchTab('favorites')" id="tab-favorites">Favorites</button>
         <button class="tab-btn" onclick="switchTab('playlists')" id="tab-playlists">Playlists</button>
     </div>
 
-    <!-- Content List -->
     <div id="list-view-area">
         <ul id="list-container">
             <li class="empty-state">Sign in to view your data.</li>
@@ -223,21 +255,20 @@
 
     // State
     let currentUser = null;
-    let userData = { history: [], favorites: [], playlists: {} }; // Local mirror of data
+    let userData = { history: [], favorites: [], playlists: {} };
     let currentTab = 'history'; 
-    let activePlaylist = null; // Name of playlist currently viewing
+    let activePlaylist = null; 
     let currentVideoUrl = ""; 
-    let currentEmbedUrl = ""; // Specifically for the popout
+    let currentEmbedUrl = ""; 
     let unsubscribe = null;
+    let hls = null; // HLS instance
 
     // --- 2. AUTHENTICATION ---
     auth.onAuthStateChanged((user) => {
         currentUser = user;
         updateAuthUI(user);
-        
-        if (user) {
-            subscribeToData(user.uid);
-        } else {
+        if (user) subscribeToData(user.uid);
+        else {
             if (unsubscribe) unsubscribe();
             userData = { history: [], favorites: [], playlists: {} };
             renderList();
@@ -280,45 +311,25 @@
     // --- 4. TABS & RENDERING ---
     function switchTab(tab) {
         currentTab = tab;
-        activePlaylist = null; // Reset playlist view when switching tabs
-        
-        // Update UI classes
+        activePlaylist = null; 
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`tab-${tab}`).classList.add('active');
-        
         renderList();
     }
 
     function renderList() {
         const list = document.getElementById('list-container');
         list.innerHTML = '';
-        
-        if (!currentUser) {
-            list.innerHTML = '<li class="empty-state">Sign in to sync your data.</li>';
-            return;
-        }
+        if (!currentUser) { list.innerHTML = '<li class="empty-state">Sign in to sync your data.</li>'; return; }
 
-        // VIEW: HISTORY
         if (currentTab === 'history') {
-            if (userData.history.length === 0) {
-                list.innerHTML = '<li class="empty-state">No history yet.</li>'; return;
-            }
-            userData.history.forEach(url => {
-                list.appendChild(createListItem(url, 'history'));
-            });
+            if (userData.history.length === 0) list.innerHTML = '<li class="empty-state">No history yet.</li>';
+            else userData.history.forEach(url => list.appendChild(createListItem(url, 'history')));
         }
-        
-        // VIEW: FAVORITES
         else if (currentTab === 'favorites') {
-            if (userData.favorites.length === 0) {
-                list.innerHTML = '<li class="empty-state">No favorites yet.</li>'; return;
-            }
-            userData.favorites.forEach(url => {
-                list.appendChild(createListItem(url, 'favorites'));
-            });
+            if (userData.favorites.length === 0) list.innerHTML = '<li class="empty-state">No favorites yet.</li>';
+            else userData.favorites.forEach(url => list.appendChild(createListItem(url, 'favorites')));
         }
-        
-        // VIEW: PLAYLISTS
         else if (currentTab === 'playlists') {
             if (activePlaylist) {
                 const videos = userData.playlists[activePlaylist] || [];
@@ -327,29 +338,21 @@
                 backBtn.innerHTML = `⬅ Back to Playlists`;
                 backBtn.onclick = () => { activePlaylist = null; renderList(); };
                 list.appendChild(backBtn);
-
+                
                 const title = document.createElement('h3');
-                title.style.margin = '10px 0';
-                title.style.color = '#8ab4f8';
+                title.style.margin = '10px 0'; title.style.color = '#8ab4f8';
                 title.textContent = `📂 ${activePlaylist}`;
                 list.appendChild(title);
 
                 if(videos.length === 0) {
-                    const li = document.createElement('li');
-                    li.className = 'empty-state';
-                    li.textContent = 'Empty playlist.';
-                    list.appendChild(li);
+                    const li = document.createElement('li'); li.className = 'empty-state'; li.textContent = 'Empty playlist.'; list.appendChild(li);
                 } else {
-                    videos.forEach(url => {
-                        list.appendChild(createListItem(url, 'playlist', activePlaylist));
-                    });
+                    videos.forEach(url => list.appendChild(createListItem(url, 'playlist', activePlaylist)));
                 }
             } else {
                 const names = Object.keys(userData.playlists);
-                if (names.length === 0) {
-                    list.innerHTML = '<li class="empty-state">No playlists.</li>'; return;
-                }
-                names.forEach(name => {
+                if (names.length === 0) list.innerHTML = '<li class="empty-state">No playlists.</li>';
+                else names.forEach(name => {
                     const li = document.createElement('li');
                     li.className = 'list-item';
                     li.innerHTML = `
@@ -367,127 +370,120 @@
     function createListItem(url, type, playlistName = null) {
         const li = document.createElement('li');
         li.className = 'list-item';
-        
         li.innerHTML = `
             <span class="item-text" onclick="playSavedUrl('${url}')">${url}</span>
             <span class="icon-btn delete-btn" title="Remove">✕</span>
         `;
-        
         li.querySelector('.delete-btn').onclick = (e) => {
             e.stopPropagation();
             if (type === 'history') removeFromHistory(url);
             if (type === 'favorites') toggleFavorite(url); 
             if (type === 'playlist') removeFromPlaylist(url, playlistName);
         };
-        
         return li;
     }
 
-    function openPlaylist(name) {
-        activePlaylist = name;
-        renderList();
-    }
+    function openPlaylist(name) { activePlaylist = name; renderList(); }
 
     // --- 5. ACTIONS ---
     function toggleFavorite(targetUrl = null) {
         if (!currentUser) return alert("Please sign in first.");
         const url = targetUrl || currentVideoUrl;
         if (!url) return;
-
         const docRef = db.collection('users').doc(currentUser.uid);
-        const isFav = userData.favorites.includes(url);
-
-        if (isFav) {
-            docRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(url) });
-        } else {
-            docRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(url) });
-        }
+        if (userData.favorites.includes(url)) docRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(url) });
+        else docRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(url) });
     }
 
     function addToPlaylist() {
         if (!currentUser) return alert("Please sign in first.");
         if (!currentVideoUrl) return alert("Play a video first.");
-
         const playlistName = prompt("Enter Playlist Name:", "My Playlist");
         if (!playlistName) return;
-
         const safeName = playlistName.trim().replace('.', '');
         if (!safeName) return;
-
         const docRef = db.collection('users').doc(currentUser.uid);
         let updateData = {};
         updateData[`playlists.${safeName}`] = firebase.firestore.FieldValue.arrayUnion(currentVideoUrl);
-
-        docRef.update(updateData)
-            .then(() => {
-                showStatus(`Added to "${safeName}"`, 'info');
-                if(currentTab !== 'playlists') switchTab('playlists');
-            })
-            .catch(e => {
-                docRef.set(updateData, { merge: true });
-            });
+        docRef.update(updateData).then(() => {
+            showStatus(`Added to "${safeName}"`, 'info');
+            if(currentTab !== 'playlists') switchTab('playlists');
+        }).catch(e => docRef.set(updateData, { merge: true }));
     }
 
     function removeFromHistory(url) {
-        db.collection('users').doc(currentUser.uid).update({
-            history: firebase.firestore.FieldValue.arrayRemove(url)
-        });
+        db.collection('users').doc(currentUser.uid).update({ history: firebase.firestore.FieldValue.arrayRemove(url) });
     }
-
-    function removeFromPlaylist(url, playlistName) {
-        let updateData = {};
-        updateData[`playlists.${playlistName}`] = firebase.firestore.FieldValue.arrayRemove(url);
-        db.collection('users').doc(currentUser.uid).update(updateData);
+    function removeFromPlaylist(url, pName) {
+        let u = {}; u[`playlists.${pName}`] = firebase.firestore.FieldValue.arrayRemove(url);
+        db.collection('users').doc(currentUser.uid).update(u);
     }
-
     function deletePlaylist(name) {
         if(!confirm(`Delete playlist "${name}"?`)) return;
-        let updateData = {};
-        updateData[`playlists.${name}`] = firebase.firestore.FieldValue.delete();
-        db.collection('users').doc(currentUser.uid).update(updateData);
+        let u = {}; u[`playlists.${name}`] = firebase.firestore.FieldValue.delete();
+        db.collection('users').doc(currentUser.uid).update(u);
     }
 
     function updateFavBtnState() {
         const btn = document.getElementById('btnFav');
         const container = document.getElementById('videoActions');
-        
-        if (!currentVideoUrl) {
-            container.style.display = 'none';
-            return;
-        }
+        if (!currentVideoUrl) { container.style.display = 'none'; return; }
         container.style.display = 'flex';
-
         if (userData.favorites.includes(currentVideoUrl)) {
-            btn.classList.add('active');
-            btn.innerHTML = '<span>⭐</span> Favorited';
+            btn.classList.add('active'); btn.innerHTML = '<span>⭐</span> Favorited';
         } else {
-            btn.classList.remove('active');
-            btn.innerHTML = '<span>☆</span> Favorite';
+            btn.classList.remove('active'); btn.innerHTML = '<span>☆</span> Favorite';
         }
     }
 
     // --- 6. PLAYER LOGIC ---
+    function toggleStreamSection() {
+        const std = document.getElementById('standard-section');
+        const stm = document.getElementById('stream-section');
+        if (std.style.display === 'none') {
+            std.style.display = 'block'; stm.style.display = 'none';
+        } else {
+            std.style.display = 'none'; stm.style.display = 'block';
+        }
+    }
+
     function playVideo() {
         const url = document.getElementById('videoLink').value.trim();
-        if (url) {
-            loadPlayer(url);
-            if (currentUser) {
-                 const docRef = db.collection('users').doc(currentUser.uid);
-                 docRef.set({
-                     history: firebase.firestore.FieldValue.arrayUnion(url)
-                 }, { merge: true });
-            }
+        if (url) { loadPlayer(url); saveHistory(url); }
+    }
+
+    function playStream() {
+        const url = document.getElementById('streamLink').value.trim();
+        if (url) { loadPlayer(url, true); saveHistory(url); }
+    }
+
+    function saveHistory(url) {
+        if (currentUser) {
+             const docRef = db.collection('users').doc(currentUser.uid);
+             docRef.set({ history: firebase.firestore.FieldValue.arrayUnion(url) }, { merge: true });
         }
     }
 
     function playSavedUrl(url) {
-        document.getElementById('videoLink').value = url;
-        playVideo();
+        // Simple heuristic: if it contains m3u8, it's a stream
+        if(url.includes('.m3u8')) {
+            document.getElementById('streamLink').value = url;
+            // Switch to stream UI so user knows
+            document.getElementById('standard-section').style.display = 'none';
+            document.getElementById('stream-section').style.display = 'block';
+            playStream();
+        } else {
+            document.getElementById('videoLink').value = url;
+            document.getElementById('standard-section').style.display = 'block';
+            document.getElementById('stream-section').style.display = 'none';
+            playVideo();
+        }
     }
 
-    function loadPlayer(url) {
+    function loadPlayer(url, forceHls = false) {
         currentVideoUrl = url;
-        
+        if(hls) { hls.destroy(); hls = null; } 
+
         const wrapper = document.getElementById('player-wrapper');
         const fallback = document.getElementById('fallback-container');
         const statusMsg = document.getElementById('statusMsg');
@@ -495,7 +491,33 @@
         wrapper.innerHTML = ''; wrapper.style.display = 'none';
         fallback.style.display = 'none'; statusMsg.style.display = 'none';
 
-        // 1. YouTube
+        // Direct HLS
+        if(forceHls || url.includes('.m3u8')) {
+            wrapper.style.display = 'block';
+            if(Hls.isSupported()) {
+                const video = document.createElement('video');
+                video.controls = true;
+                video.autoplay = true;
+                video.style.width = '100%'; video.style.height = '100%';
+                wrapper.appendChild(video);
+                
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                hls.on(Hls.Events.ERROR, (e, data) => {
+                    if(data.fatal) showStatus("Stream Error: " + data.type, 'error');
+                });
+                showStatus("Playing Direct Stream (HLS)", "info");
+            } else if (wrapper.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari
+                wrapper.innerHTML = `<video src="${url}" controls autoplay style="width:100%;height:100%"></video>`;
+            }
+            updateFavBtnState();
+            return;
+        }
+
+        // Standard Embed Handling
         const ytId = getYouTubeID(url);
         if (ytId) {
             wrapper.style.display = 'block';
@@ -504,33 +526,46 @@
             return;
         }
         
-        // 2. Direct File
-        if (url.match(/\.(mp4|webm|ogg|m3u8)($|\?)/i)) {
+        if (url.match(/\.(mp4|webm|ogg)($|\?)/i)) {
             wrapper.style.display = 'block';
             wrapper.innerHTML = `<video controls autoplay><source src="${url}" type="video/mp4"></video>`;
             updateFavBtnState();
             return;
         }
 
-        // 3. Smart Embed / Fallback
         const embedUrl = getSmartEmbedURL(url) || url;
-        currentEmbedUrl = embedUrl; // Save for popout
+        currentEmbedUrl = embedUrl; 
         
         wrapper.style.display = 'block';
-        // RESTORED SANDBOX & LOADING=EAGER
+        
+        const isStrict = url.includes('xhamster') || url.includes('pornhub');
+        if(isStrict) {
+             fallback.innerHTML = `
+                <p style="margin:0 0 8px 0; color:#ffc107; font-size:14px;">
+                    <strong>⚠️ Restricted Site:</strong> If the screen is black, use the Pop-out player.
+                </p>
+                <button class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
+            `;
+            fallback.style.display = 'block';
+        } else {
+             fallback.innerHTML = `
+                <p style="margin:0 0 8px 0; color:#ddd; font-size:14px;">
+                    <strong>Video Blocked?</strong> Use the secure Pop-out player.
+                </p>
+                <button class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
+            `;
+            fallback.style.display = 'block';
+        }
+
         wrapper.innerHTML = `
             <iframe 
                 src="${embedUrl}" 
                 frameborder="0" 
                 loading="eager"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
                 allowfullscreen 
                 referrerpolicy="no-referrer">
             </iframe>
         `;
-        
-        // Show fallback button
-        fallback.style.display = 'block';
         updateFavBtnState();
     }
 
@@ -544,7 +579,6 @@
             const u = new URL(url);
             const d = u.hostname.toLowerCase();
             const p = u.pathname.replace(/\/$/, '');
-            
             if (d.includes('pornhub')) {
                 const k = url.match(/viewkey=([^&]+)/);
                 return k ? `https://www.pornhub.com/embed/${k[1]}` : null;
