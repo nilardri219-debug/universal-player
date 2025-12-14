@@ -654,6 +654,18 @@
                         if (name) this.store.addAction('playlist', this.store.currentVideo, name);
                     }
                 };
+
+                // Expose auth toggle
+                this.auth = {
+                    toggle: () => {
+                        if (this.store.user) {
+                            this.store.auth.signOut();
+                        } else {
+                            this.store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                                .catch(e => this.ui.toast(e.message, 'error'));
+                        }
+                    }
+                };
             }
         }
 
