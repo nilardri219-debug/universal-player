@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://www.google.com">
 
     <!-- LIBRARIES -->
-    <!-- Tailwind CSS for Professional Styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -29,24 +29,22 @@
         }
     </script>
     
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Toastify for Notifications -->
+    <!-- Toastify -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-    <!-- HLS.js for Streaming -->
+    <!-- HLS.js -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #1a202c; }
         ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #718096; }
         
-        /* Animations */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -67,22 +65,22 @@
         </div>
 
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-            <button onclick="app.ui.navigate('player')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3 bg-gray-800 text-white">
+            <button onclick="window.app?.ui?.navigate('player')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3 bg-gray-800 text-white">
                 <i class="fa-solid fa-play-circle w-6"></i> Player
             </button>
-            <button onclick="app.ui.navigate('converter')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
+            <button onclick="window.app?.ui?.navigate('converter')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
                 <i class="fa-solid fa-wand-magic-sparkles w-6"></i> Converter
             </button>
             
             <div class="pt-4 pb-2 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Library</div>
             
-            <button onclick="app.ui.switchListTab('history')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
+            <button onclick="window.app?.ui?.switchListTab('history')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
                 <i class="fa-solid fa-clock-rotate-left w-6"></i> History
             </button>
-            <button onclick="app.ui.switchListTab('favorites')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
+            <button onclick="window.app?.ui?.switchListTab('favorites')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
                 <i class="fa-solid fa-star w-6"></i> Favorites
             </button>
-            <button onclick="app.ui.switchListTab('playlists')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
+            <button onclick="window.app?.ui?.switchListTab('playlists')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
                 <i class="fa-solid fa-folder w-6"></i> Playlists
             </button>
         </nav>
@@ -96,7 +94,8 @@
                     <p id="user-name" class="text-sm font-medium truncate">Guest</p>
                     <p id="auth-status" class="text-xs text-gray-500 truncate">Not synced</p>
                 </div>
-                <button onclick="app.auth.toggle()" class="text-gray-400 hover:text-white">
+                <!-- FIXED: Using safe call for auth toggle -->
+                <button onclick="window.app?.auth?.toggle()" class="text-gray-400 hover:text-white">
                     <i class="fa-solid fa-right-to-bracket"></i>
                 </button>
             </div>
@@ -112,7 +111,7 @@
                 <i class="fa-solid fa-cloud text-brand-500"></i>
                 <span class="font-bold">CloudStream</span>
             </div>
-            <button onclick="app.ui.toggleMobileMenu()" class="text-gray-400 hover:text-white">
+            <button onclick="window.app?.ui?.toggleMobileMenu()" class="text-gray-400 hover:text-white">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
         </header>
@@ -122,19 +121,17 @@
             
             <!-- VIEW: PLAYER -->
             <div id="view-player" class="view-section max-w-5xl mx-auto fade-in">
-                <!-- Input Area -->
                 <div class="bg-gray-900 p-1 rounded-xl shadow-lg border border-gray-800 flex items-center mb-6">
                     <div class="pl-4 text-gray-500"><i class="fa-solid fa-link"></i></div>
                     <input type="text" id="videoInput" 
                         class="flex-1 bg-transparent border-none text-white px-4 py-3 focus:outline-none placeholder-gray-600"
                         placeholder="Paste YouTube, .m3u8, .mp4, or website link here...">
-                    <button onclick="app.player.playFromInput()" 
+                    <button onclick="window.app?.player?.playFromInput()" 
                         class="bg-brand-600 hover:bg-brand-500 text-white px-6 py-2 rounded-lg font-bold transition m-1">
                         Play
                     </button>
                 </div>
 
-                <!-- Video Container -->
                 <div id="video-container" class="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800 group">
                     <div id="player-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-600">
                         <i class="fa-solid fa-film text-6xl mb-4 opacity-50"></i>
@@ -143,17 +140,15 @@
                     <div id="active-player" class="absolute inset-0 hidden"></div>
                 </div>
 
-                <!-- Controls & Meta -->
                 <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
                     <div class="flex gap-2 items-center">
-                        <button onclick="app.data.toggleFavorite()" id="btn-fav" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
+                        <button onclick="window.app?.data?.toggleFavorite()" id="btn-fav" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
                             <i class="fa-regular fa-star"></i> Favorite
                         </button>
-                        <button onclick="app.data.addToPlaylist()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
+                        <button onclick="window.app?.data?.addToPlaylist()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
                             <i class="fa-regular fa-folder"></i> Add to Playlist
                         </button>
                         
-                        <!-- NEW: Quality Selector -->
                         <div id="quality-control" class="hidden flex items-center gap-2 ml-2 border-l border-gray-700 pl-4">
                             <label class="text-sm text-gray-400 font-bold"><i class="fa-solid fa-sliders"></i> Quality:</label>
                             <select id="quality-select" class="bg-gray-800 text-white text-sm rounded-lg px-2 py-1.5 border border-gray-700 focus:outline-none focus:border-brand-500">
@@ -163,21 +158,19 @@
                     </div>
                     
                     <div id="fallback-trigger" class="hidden">
-                        <button onclick="app.player.openPopout()" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-2">
+                        <button onclick="window.app?.player?.openPopout()" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-2">
                             <i class="fa-solid fa-external-link-alt"></i> Video blocked? Pop-out
                         </button>
                     </div>
                 </div>
 
-                <!-- List Section (History/Favs) embedded below player -->
                 <div class="mt-8">
                     <div class="flex border-b border-gray-800 mb-4">
-                        <button onclick="app.ui.switchListTab('history')" id="tab-history" class="list-tab px-4 py-2 text-brand-500 border-b-2 border-brand-500 font-medium">History</button>
-                        <button onclick="app.ui.switchListTab('favorites')" id="tab-favorites" class="list-tab px-4 py-2 text-gray-500 hover:text-gray-300 font-medium">Favorites</button>
-                        <button onclick="app.ui.switchListTab('playlists')" id="tab-playlists" class="list-tab px-4 py-2 text-gray-500 hover:text-gray-300 font-medium">Playlists</button>
+                        <button onclick="window.app?.ui?.switchListTab('history')" id="tab-history" class="list-tab px-4 py-2 text-brand-500 border-b-2 border-brand-500 font-medium">History</button>
+                        <button onclick="window.app?.ui?.switchListTab('favorites')" id="tab-favorites" class="list-tab px-4 py-2 text-gray-500 hover:text-gray-300 font-medium">Favorites</button>
+                        <button onclick="window.app?.ui?.switchListTab('playlists')" id="tab-playlists" class="list-tab px-4 py-2 text-gray-500 hover:text-gray-300 font-medium">Playlists</button>
                     </div>
                     <div id="list-content" class="bg-gray-900 rounded-xl border border-gray-800 min-h-[200px] max-h-[400px] overflow-y-auto p-2">
-                        <!-- Items injected here -->
                         <div class="text-center py-10 text-gray-600 italic">No items yet.</div>
                     </div>
                 </div>
@@ -194,7 +187,7 @@
                             <label class="block text-sm font-medium text-gray-400 mb-2">Target URL</label>
                             <input type="text" id="convert-url" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3 focus:border-brand-500 focus:outline-none text-white" placeholder="https://site.com/video...">
                         </div>
-                        <button onclick="app.converter.scan()" id="btn-scan" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2">
+                        <button onclick="window.app?.converter?.scan()" id="btn-scan" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2">
                             <span>Start Scan</span>
                         </button>
                     </div>
@@ -203,14 +196,14 @@
                         <p class="text-green-500 text-sm font-bold mb-2">✅ Stream Found!</p>
                         <div class="flex gap-2">
                             <input type="text" id="scan-output" readonly class="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-2 text-xs text-gray-300 font-mono">
-                            <button onclick="app.converter.copyResult()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm"><i class="fa-regular fa-copy"></i></button>
-                            <button onclick="app.converter.playResult()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm font-bold">Play</button>
+                            <button onclick="window.app?.converter?.copyResult()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm"><i class="fa-regular fa-copy"></i></button>
+                            <button onclick="window.app?.converter?.playResult()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm font-bold">Play</button>
                         </div>
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-800">
                         <h3 class="font-bold text-gray-300 mb-2">Advanced: The "Stream Sniffer"</h3>
-                        <p class="text-sm text-gray-500 mb-4">If the auto-scan fails due to Cloudflare, drag this button to your bookmarks bar. Click it while on the video site to extract the link manually.</p>
+                        <p class="text-sm text-gray-500 mb-4">If Auto-Scan fails, drag this button to your bookmarks bar. Click it on the video site to extract the link manually.</p>
                         <a href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{var v=document.getElementsByTagName('video');var found=null;for(var i=0;i<v.length;i++){if(v[i].src&&v[i].src.includes('.m3u8'))found=v[i].src;}if(found){prompt('Stream found via Video Tag:',found)}else{alert('No stream detected yet. Play the video first.')}}})()" 
                            class="inline-block bg-gray-800 border border-gray-600 text-gray-300 hover:text-white px-3 py-1 rounded text-xs font-mono cursor-grab">
                             🕵️ Stream Sniffer Bookmarklet
@@ -228,13 +221,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
-        /**
-         * ==========================================
-         * CLOUDSTREAM PRO - CORE ENGINE
-         * ==========================================
-         */
-
-        // 1. CONFIGURATION
+        // CONFIG
         const CONFIG = {
             firebase: {
                 apiKey: "AIzaSyAHAkFmBFw4hPcYq5lJbJoLS4jlcEDcTbk",
@@ -251,7 +238,8 @@
             ]
         };
 
-        // 2. STATE MANAGEMENT (Store)
+        // --- CLASSES (JAVA/PYTHON STYLE STRUCTURE) ---
+
         class AppStore {
             constructor() {
                 this.user = null;
@@ -259,24 +247,26 @@
                 this.currentVideo = null;
                 this.dbUnsubscribe = null;
                 
-                // Initialize Firebase
-                firebase.initializeApp(CONFIG.firebase);
-                this.auth = firebase.auth();
-                this.db = firebase.firestore();
-                
-                this.setupAuthListener();
+                try {
+                    firebase.initializeApp(CONFIG.firebase);
+                    this.auth = firebase.auth();
+                    this.db = firebase.firestore();
+                    this.setupAuthListener();
+                } catch (e) {
+                    console.error("Firebase Init Error:", e);
+                }
             }
 
             setupAuthListener() {
                 this.auth.onAuthStateChanged(user => {
                     this.user = user;
-                    app.ui.updateAuth(user);
+                    window.app.ui.updateAuth(user);
                     if (user) {
                         this.syncData(user.uid);
                     } else {
                         if (this.dbUnsubscribe) this.dbUnsubscribe();
                         this.data = { history: [], favorites: [], playlists: {} };
-                        app.ui.renderList();
+                        window.app.ui.renderList();
                     }
                 });
             }
@@ -288,50 +278,43 @@
                         this.data.history = cloudData.history || [];
                         this.data.favorites = cloudData.favorites || [];
                         this.data.playlists = cloudData.playlists || {};
-                        app.ui.renderList();
-                        app.ui.updateFavButton();
+                        window.app.ui.renderList();
+                        window.app.ui.updateFavButton();
                     }
                 });
             }
 
             async addAction(type, value, extra = null) {
                 if (!this.user) {
-                    app.ui.toast("Please sign in to save data.", "error");
+                    window.app.ui.toast("Please sign in to save data.", "error");
                     return;
                 }
                 const docRef = this.db.collection('users').doc(this.user.uid);
-                
                 try {
                     if (type === 'history') {
-                        // Optimistic UI update
                         this.data.history.unshift(value); 
-                        app.ui.renderList();
-                        
-                        await docRef.set({
-                            history: firebase.firestore.FieldValue.arrayUnion(value)
-                        }, { merge: true });
+                        window.app.ui.renderList();
+                        await docRef.set({ history: firebase.firestore.FieldValue.arrayUnion(value) }, { merge: true });
                     } else if (type === 'favorite') {
                         if (this.data.favorites.includes(value)) {
                             await docRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(value) });
-                            app.ui.toast("Removed from Favorites");
+                            window.app.ui.toast("Removed from Favorites");
                         } else {
                             await docRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(value) });
-                            app.ui.toast("Added to Favorites");
+                            window.app.ui.toast("Added to Favorites");
                         }
                     } else if (type === 'playlist' && extra) {
                         let update = {};
                         update[`playlists.${extra}`] = firebase.firestore.FieldValue.arrayUnion(value);
                         await docRef.set(update, { merge: true });
-                        app.ui.toast(`Added to ${extra}`);
+                        window.app.ui.toast(`Added to ${extra}`);
                     }
                 } catch (e) {
-                    console.error(e);
-                    app.ui.toast("Sync Error", "error");
+                    window.app.ui.toast("Sync Error", "error");
                 }
             }
         }
 
-        // 3. VIDEO ENGINE
         class VideoEngine {
             constructor() {
                 this.hls = null;
@@ -343,41 +326,29 @@
 
             load(url) {
                 this.reset();
-                app.store.currentVideo = url;
-                app.store.addAction('history', url);
-                app.ui.updateFavButton();
+                window.app.store.currentVideo = url;
+                window.app.store.addAction('history', url);
+                window.app.ui.updateFavButton();
 
-                // Determine Type
-                if (url.includes('.m3u8')) {
-                    this.playHLS(url);
-                } else if (this.isYoutube(url)) {
-                    this.playYoutube(url);
-                } else if (this.isDirectFile(url)) {
-                    this.playDirect(url);
-                } else {
-                    this.playEmbed(url); // Fallback to Smart Embed
-                }
+                if (url.includes('.m3u8')) this.playHLS(url);
+                else if (this.isYoutube(url)) this.playYoutube(url);
+                else if (this.isDirectFile(url)) this.playDirect(url);
+                else this.playEmbed(url);
             }
 
             reset() {
-                if (this.hls) {
-                    this.hls.destroy();
-                    this.hls = null;
-                }
+                if (this.hls) { this.hls.destroy(); this.hls = null; }
                 this.container.innerHTML = '';
                 this.container.classList.remove('hidden');
                 this.placeholder.classList.add('hidden');
                 document.getElementById('fallback-trigger').classList.add('hidden');
-                
-                // Reset quality controls
                 this.qualityCtrl.classList.add('hidden');
                 this.qualitySelect.innerHTML = '<option value="-1">Auto</option>';
             }
 
             playHLS(url) {
                 const video = document.createElement('video');
-                video.controls = true;
-                video.autoplay = true;
+                video.controls = true; video.autoplay = true;
                 video.className = "w-full h-full object-contain";
                 this.container.appendChild(video);
 
@@ -386,39 +357,30 @@
                     this.hls.loadSource(url);
                     this.hls.attachMedia(video);
                     
-                    // --- QUALITY SELECTOR LOGIC ---
                     this.hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
                         const levels = data.levels;
-                        const selector = this.qualitySelect;
-                        
-                        // Show control if multiple qualities exist
                         if(levels.length > 0) {
                             this.qualityCtrl.classList.remove('hidden');
-                            
-                            // Populate Dropdown
                             levels.forEach((level, index) => {
                                 const opt = document.createElement('option');
                                 opt.value = index;
                                 opt.text = level.height + 'p (' + Math.round(level.bitrate/1000) + 'k)';
-                                selector.appendChild(opt);
+                                this.qualitySelect.appendChild(opt);
                             });
-
-                            // Handle Change
-                            selector.onchange = (e) => {
+                            this.qualitySelect.onchange = (e) => {
                                 this.hls.currentLevel = parseInt(e.target.value);
-                                app.ui.toast(`Quality set to ${e.target.options[e.target.selectedIndex].text}`);
+                                window.app.ui.toast(`Quality set to ${e.target.options[e.target.selectedIndex].text}`);
                             };
                         }
                         video.play();
                     });
-
                     this.hls.on(Hls.Events.ERROR, (e, data) => {
-                        if (data.fatal) app.ui.toast("Stream Error: " + data.details, "error");
+                        if (data.fatal) window.app.ui.toast("Stream Error: " + data.details, "error");
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = url;
                 }
-                app.ui.toast("Playing HLS Stream");
+                window.app.ui.toast("Playing HLS Stream");
             }
 
             playYoutube(url) {
@@ -447,12 +409,9 @@
                     }
                 } catch(e) {}
 
-                this.container.innerHTML = `
-                    <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>
-                `;
-                
+                this.container.innerHTML = `<iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
                 document.getElementById('fallback-trigger').classList.remove('hidden');
-                app.ui.toast("Loaded Embed Player. If blocked, use Pop-out.", "info");
+                window.app.ui.toast("Loaded Embed Player. If blocked, use Pop-out.", "info");
             }
 
             isYoutube(url) { return url.match(/(youtube\.com|youtu\.be)/); }
@@ -464,19 +423,18 @@
             }
 
             openPopout() {
-                if (app.store.currentVideo) {
-                    window.open(app.store.currentVideo, 'PopoutPlayer', 'width=854,height=480,scrollbars=yes');
+                if (window.app.store.currentVideo) {
+                    window.open(window.app.store.currentVideo, 'PopoutPlayer', 'width=854,height=480,scrollbars=yes');
                 }
             }
         }
 
-        // 4. LINK CONVERTER
+        // 4. CONVERTER
         class Converter {
             async scan() {
                 const input = document.getElementById('convert-url').value.trim();
                 const btn = document.getElementById('btn-scan');
-                
-                if (!input) return app.ui.toast("Enter a URL first", "error");
+                if (!input) return window.app.ui.toast("Enter a URL first", "error");
 
                 btn.innerHTML = '<span class="loader"></span> Scanning...';
                 btn.disabled = true;
@@ -500,9 +458,9 @@
                 if (found) {
                     document.getElementById('scan-output').value = found;
                     document.getElementById('scan-result').classList.remove('hidden');
-                    app.ui.toast("Stream Link Found!", "success");
+                    window.app.ui.toast("Stream Link Found!", "success");
                 } else {
-                    app.ui.toast("Scan failed. Site is secure. Use the Sniffer bookmarklet.", "error");
+                    window.app.ui.toast("Scan failed. Site is secure. Use the Sniffer bookmarklet.", "error");
                 }
             }
 
@@ -510,14 +468,14 @@
                 const el = document.getElementById('scan-output');
                 el.select();
                 document.execCommand('copy');
-                app.ui.toast("Copied to clipboard");
+                window.app.ui.toast("Copied to clipboard");
             }
 
             playResult() {
                 const url = document.getElementById('scan-output').value;
-                app.ui.navigate('player');
+                window.app.ui.navigate('player');
                 document.getElementById('videoInput').value = url;
-                app.player.load(url);
+                window.app.player.load(url);
             }
         }
 
@@ -549,16 +507,13 @@
                 const nameEl = document.getElementById('user-name');
                 const statusEl = document.getElementById('auth-status');
                 const btn = document.querySelector('#user-section button i');
-                
                 if (user) {
                     nameEl.innerText = user.displayName || "User";
-                    statusEl.innerText = "Synced";
-                    statusEl.className = "text-xs text-green-500";
+                    statusEl.innerText = "Synced"; statusEl.className = "text-xs text-green-500";
                     btn.className = "fa-solid fa-right-from-bracket";
                 } else {
                     nameEl.innerText = "Guest";
-                    statusEl.innerText = "Not synced";
-                    statusEl.className = "text-xs text-gray-500";
+                    statusEl.innerText = "Not synced"; statusEl.className = "text-xs text-gray-500";
                     btn.className = "fa-solid fa-right-to-bracket";
                 }
             }
@@ -566,24 +521,20 @@
             switchListTab(tab) {
                 this.currentListTab = tab;
                 this.activePlaylist = null;
-                
                 document.querySelectorAll('.list-tab').forEach(t => {
                     t.classList.remove('text-brand-500', 'border-b-2', 'border-brand-500');
                     t.classList.add('text-gray-500');
                 });
                 document.getElementById(`tab-${tab}`).classList.remove('text-gray-500');
                 document.getElementById(`tab-${tab}`).classList.add('text-brand-500', 'border-b-2', 'border-brand-500');
-                
                 this.renderList();
             }
 
             renderList() {
                 const container = document.getElementById('list-content');
-                const data = app.store.data;
+                const data = window.app.store.data;
                 const tab = this.currentListTab;
-                
                 container.innerHTML = '';
-
                 let items = [];
                 
                 if (tab === 'history') items = data.history;
@@ -599,7 +550,6 @@
                     } else {
                         const names = Object.keys(data.playlists);
                         if (names.length === 0) container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">No playlists.</div>';
-                        
                         names.forEach(name => {
                             const el = document.createElement('div');
                             el.className = "flex justify-between items-center p-3 hover:bg-gray-800 rounded-lg group cursor-pointer transition";
@@ -609,7 +559,6 @@
                                     <span class="truncate text-sm font-medium">${name}</span>
                                     <span class="text-xs text-gray-600">(${data.playlists[name].length})</span>
                                 </div>
-                                <button class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-trash"></i></button>
                             `;
                             el.querySelector('div').onclick = () => { this.activePlaylist = name; this.renderList(); };
                             container.appendChild(el);
@@ -618,34 +567,26 @@
                     }
                 }
 
-                if (items.length === 0) {
-                    container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">List is empty.</div>';
-                    return;
-                }
+                if (items.length === 0) { container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">List is empty.</div>'; return; }
 
                 items.forEach(url => {
                     const el = document.createElement('div');
                     el.className = "flex justify-between items-center p-3 hover:bg-gray-800 rounded-lg group transition";
                     el.innerHTML = `
-                        <div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1" onclick="app.player.load('${url}')">
+                        <div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1" onclick="window.app.player.load('${url}')">
                             <i class="fa-solid fa-play text-gray-600 text-xs"></i>
                             <span class="truncate text-sm text-gray-300 group-hover:text-white">${url}</span>
                         </div>
-                        <button class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition ml-2 delete-btn">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
                     `;
-                    el.querySelector('.delete-btn').onclick = () => { /* Add delete logic */ };
                     container.appendChild(el);
                 });
             }
 
             updateFavButton() {
                 const btn = document.getElementById('btn-fav');
-                const url = app.store.currentVideo;
+                const url = window.app.store.currentVideo;
                 if (!url) return;
-                
-                const isFav = app.store.data.favorites.includes(url);
+                const isFav = window.app.store.data.favorites.includes(url);
                 if (isFav) {
                     btn.innerHTML = '<i class="fa-solid fa-star text-yellow-500"></i> Favorited';
                     btn.classList.add('text-white');
@@ -672,6 +613,7 @@
                 this.player = new VideoEngine();
                 this.converter = new Converter();
                 
+                // Expose methods for HTML onclick
                 this.data = {
                     toggleFavorite: () => this.store.addAction('favorite', this.store.currentVideo),
                     addToPlaylist: () => {
@@ -680,6 +622,7 @@
                     }
                 };
 
+                // FIXED: Explicitly defined auth toggle
                 this.auth = {
                     toggle: () => {
                         if (this.store.user) {
@@ -693,8 +636,8 @@
             }
         }
 
-        // Start
-        const app = new App();
+        // START APP (Global Window Scope to prevent reference errors)
+        window.app = new App();
 
     </script>
 </body>
