@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
     
-    <!-- NUCLEAR OPTION: Global Referrer Hide -->
     <meta name="referrer" content="no-referrer">
-    
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
 
-    <!-- HLS.js Library for Direct Streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
@@ -61,32 +58,17 @@
         }
         button.play-btn {
             padding: 12px 24px; background-color: #007bff; color: white; border: none;
-            border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;
+            border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; white-space: nowrap;
         }
         button.play-btn:hover { background-color: #0056b3; }
+        button:disabled { background-color: #555 !important; cursor: not-allowed; }
 
-        /* --- Stream Mode Toggle --- */
-        .mode-toggle {
-            text-align: right; margin-bottom: 20px;
+        /* --- Converter Section --- */
+        .converter-box {
+            background: #383838; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; border: 1px solid #555;
         }
-        .mode-link {
-            color: #8ab4f8; font-size: 13px; cursor: pointer; text-decoration: none; border-bottom: 1px dashed #8ab4f8;
-        }
-        .mode-link:hover { color: #fff; border-color: #fff; }
-
-        /* --- Stream Section --- */
-        #stream-section {
-            display: none; /* Hidden by default */
-            background: #383838;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: left;
-            border: 1px solid #555;
-            animation: fadeIn 0.3s;
-        }
-        #stream-section h4 { margin-top: 0; color: #28a745; margin-bottom: 5px; }
-        #stream-section p { font-size: 13px; color: #ccc; margin-bottom: 10px; line-height: 1.4; }
+        .converter-title { color: #f0ad4e; margin: 0 0 10px 0; font-size: 16px; }
+        .converter-desc { font-size: 12px; color: #ccc; margin-bottom: 10px; }
 
         #player-wrapper {
             width: 100%; position: relative; padding-bottom: 56.25%; height: 0;
@@ -97,75 +79,40 @@
         }
         
         /* --- Video Actions --- */
-        .video-actions {
-            display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; display: none;
-        }
+        .video-actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; display: none; }
         .action-btn {
             background: #444; color: white; border: none; padding: 8px 15px;
-            border-radius: 20px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px;
-            transition: 0.2s;
+            border-radius: 20px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px; transition: 0.2s;
         }
         .action-btn:hover { background: #555; }
         .action-btn.active { background: #ffc107; color: #000; } 
 
-        /* --- Tabs --- */
-        .tabs {
-            display: flex; border-bottom: 1px solid #444; margin-bottom: 10px;
-        }
+        /* --- Tabs & Lists --- */
+        .tabs { display: flex; border-bottom: 1px solid #444; margin-bottom: 10px; }
         .tab-btn {
             flex: 1; background: none; border: none; padding: 10px; color: #888;
             cursor: pointer; font-size: 15px; border-bottom: 2px solid transparent;
         }
-        .tab-btn:hover { color: #ddd; }
         .tab-btn.active { color: white; border-bottom: 2px solid #007bff; font-weight: bold; }
 
-        /* --- Lists --- */
-        #list-container {
-            list-style: none; padding: 0; margin: 0;
-            max-height: 300px; overflow-y: auto; text-align: left;
-        }
+        #list-container { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; text-align: left; }
         .list-item {
             padding: 10px; border-bottom: 1px solid #333; background: #2d2d2d;
             display: flex; justify-content: space-between; align-items: center;
-            transition: background 0.1s;
         }
         .list-item:hover { background: #383838; }
-        
-        .item-text {
-            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            margin-right: 15px; flex-grow: 1; color: #eee; font-size: 14px;
-        }
-        .item-text:hover { text-decoration: underline; color: #fff; }
-
-        .item-meta { font-size: 12px; color: #666; margin-right: 10px; }
-
+        .item-text { cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 15px; flex-grow: 1; color: #eee; font-size: 14px; }
         .icon-btn { cursor: pointer; padding: 4px; color: #888; font-size: 16px; }
-        .icon-btn:hover { color: #fff; }
         .delete-btn:hover { color: #ff6b6b; }
-
-        .playlist-folder {
-            display: flex; align-items: center; gap: 10px; font-weight: bold; color: #8ab4f8;
-        }
-        .back-btn {
-            width: 100%; text-align: left; background: #333; border: none; color: white;
-            padding: 8px; cursor: pointer; margin-bottom: 5px; border-radius: 4px;
-        }
-        .back-btn:hover { background: #444; }
+        .playlist-folder { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #8ab4f8; }
+        .back-btn { width: 100%; text-align: left; background: #333; border: none; color: white; padding: 8px; cursor: pointer; margin-bottom: 5px; border-radius: 4px; }
 
         /* Fallback */
-        #fallback-container { 
-            display: none; margin-bottom: 20px; text-align: center; background: #333; padding: 15px; border-radius: 8px; border: 1px solid #444;
-        }
-        .popout-btn {
-            background: #d9534f; color: white; padding: 12px 24px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .popout-btn:hover { background: #c9302c; }
-        
-        .status-msg { margin: 10px 0; padding: 10px; border-radius: 5px; display: none; font-size: 14px; }
-        .info { background: #17a2b8; } .error { background: #d9534f; }
+        #fallback-container { display: none; margin-bottom: 20px; text-align: center; background: #333; padding: 15px; border-radius: 8px; border: 1px solid #444; }
+        .popout-btn { background: #d9534f; color: white; padding: 12px 24px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .status-msg { margin: 10px 0; padding: 10px; border-radius: 5px; display: none; font-size: 14px; word-break: break-all; }
+        .info { background: #17a2b8; } .error { background: #d9534f; } .success { background: #28a745; }
         .empty-state { padding: 20px; text-align: center; color: #777; font-style: italic; }
-
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
@@ -179,31 +126,28 @@
         <button id="authBtn" class="btn-auth" onclick="handleAuth()">Sign in with Google</button>
     </div>
 
-    <!-- STANDARD PLAYER SECTION -->
-    <div id="standard-section">
+    <!-- MAIN PLAYER SECTION -->
+    <div class="converter-box">
+        <h3 class="converter-title">🔗 Video Link to M3U8 Converter</h3>
+        <p class="converter-desc">Paste a website link below. We will try to extract the .m3u8 stream automatically.</p>
+        
         <div class="input-group">
-            <input type="text" id="videoLink" placeholder="Paste website link (YouTube, etc.)...">
-            <button class="play-btn" onclick="playVideo()">Play</button>
+            <input type="text" id="convertInput" placeholder="https://xhamster.com/videos/...">
+            <button id="convertBtn" class="play-btn" style="background: #f0ad4e;" onclick="attemptConversion()">⚡ Convert & Play</button>
         </div>
-        <div class="mode-toggle">
-            <span class="mode-link" onclick="toggleStreamSection()">⟳ Switch to Direct Stream (.m3u8) Player</span>
+        
+        <!-- Manual Bookmarklet fallback -->
+        <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555;">
+            <p style="font-size:11px; color:#aaa; margin:0;">
+                If auto-convert fails (due to security), drag this button to your bookmarks bar and click it on the video site:
+                <a style="background:#555; color:#fff; padding:2px 6px; border-radius:3px; text-decoration:none; margin-left:5px;" href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{alert('No stream found yet. 1. Play the video. 2. Click this bookmark again.')}})">🕵️ Stream Sniffer</a>
+            </p>
         </div>
     </div>
 
-    <!-- DIRECT STREAM SECTION (Hidden by default) -->
-    <div id="stream-section">
-        <h4>Direct Stream Player (HLS)</h4>
-        <p>
-            Paste a <strong>.m3u8</strong> link here. This bypasses site blocking by playing the raw stream.<br>
-            <em>(Tip: Open F12 > Network tab, filter for "m3u8", and copy the URL)</em>
-        </p>
-        <div class="input-group">
-            <input type="text" id="streamLink" placeholder="https://example.com/video/master.m3u8">
-            <button class="play-btn" style="background-color: #28a745;" onclick="playStream()">Play Stream</button>
-        </div>
-        <div class="mode-toggle">
-            <span class="mode-link" onclick="toggleStreamSection()">⟲ Back to Standard Player</span>
-        </div>
+    <div class="input-group">
+        <input type="text" id="videoLink" placeholder="Direct Player Input (.m3u8, mp4, YouTube)...">
+        <button class="play-btn" onclick="playVideo()">Play</button>
     </div>
     
     <div id="statusMsg" class="status-msg"></div>
@@ -261,7 +205,7 @@
     let currentVideoUrl = ""; 
     let currentEmbedUrl = ""; 
     let unsubscribe = null;
-    let hls = null; // HLS instance
+    let hls = null; 
 
     // --- 2. AUTHENTICATION ---
     auth.onAuthStateChanged((user) => {
@@ -436,25 +380,53 @@
         }
     }
 
-    // --- 6. PLAYER LOGIC ---
-    function toggleStreamSection() {
-        const std = document.getElementById('standard-section');
-        const stm = document.getElementById('stream-section');
-        if (std.style.display === 'none') {
-            std.style.display = 'block'; stm.style.display = 'none';
-        } else {
-            std.style.display = 'none'; stm.style.display = 'block';
+    // --- 6. AUTO CONVERTER LOGIC (NEW) ---
+    async function attemptConversion() {
+        const rawInput = document.getElementById('convertInput').value.trim();
+        const btn = document.getElementById('convertBtn');
+        if (!rawInput) return;
+
+        btn.innerText = "⏳ Scanning...";
+        btn.disabled = true;
+        showStatus("Scanning website for m3u8 stream...", "info");
+
+        // Use a CORS proxy to fetch the HTML content
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rawInput)}`;
+
+        try {
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            
+            if (data.contents) {
+                // REGEX: Look for links ending in .m3u8 or .m3u8?token=...
+                // Many sites put this in window.initialState or similar JS variables
+                const m3u8Match = data.contents.match(/(https?:\/\/[^"'\s]+\.m3u8[^"'\s]*)/);
+                
+                if (m3u8Match && m3u8Match[0]) {
+                    // Clean up potential escape characters (backslashes)
+                    const cleanUrl = m3u8Match[0].replace(/\\/g, '');
+                    showStatus("Success! Stream found.", "success");
+                    document.getElementById('videoLink').value = cleanUrl;
+                    playVideo();
+                } else {
+                    showStatus("Could not auto-detect stream. Site is likely protected. Use the Sniffer bookmarklet below.", "error");
+                }
+            } else {
+                throw new Error("No data returned");
+            }
+        } catch (e) {
+            console.error(e);
+            showStatus("Scan failed (CORS/Blocking). Try the manual Sniffer bookmarklet.", "error");
+        } finally {
+            btn.innerText = "⚡ Convert & Play";
+            btn.disabled = false;
         }
     }
 
+    // --- 7. PLAYER LOGIC ---
     function playVideo() {
         const url = document.getElementById('videoLink').value.trim();
         if (url) { loadPlayer(url); saveHistory(url); }
-    }
-
-    function playStream() {
-        const url = document.getElementById('streamLink').value.trim();
-        if (url) { loadPlayer(url, true); saveHistory(url); }
     }
 
     function saveHistory(url) {
@@ -465,22 +437,11 @@
     }
 
     function playSavedUrl(url) {
-        // Simple heuristic: if it contains m3u8, it's a stream
-        if(url.includes('.m3u8')) {
-            document.getElementById('streamLink').value = url;
-            // Switch to stream UI so user knows
-            document.getElementById('standard-section').style.display = 'none';
-            document.getElementById('stream-section').style.display = 'block';
-            playStream();
-        } else {
-            document.getElementById('videoLink').value = url;
-            document.getElementById('standard-section').style.display = 'block';
-            document.getElementById('stream-section').style.display = 'none';
-            playVideo();
-        }
+        document.getElementById('videoLink').value = url;
+        playVideo();
     }
 
-    function loadPlayer(url, forceHls = false) {
+    function loadPlayer(url) {
         currentVideoUrl = url;
         if(hls) { hls.destroy(); hls = null; } 
 
@@ -491,8 +452,8 @@
         wrapper.innerHTML = ''; wrapper.style.display = 'none';
         fallback.style.display = 'none'; statusMsg.style.display = 'none';
 
-        // Direct HLS
-        if(forceHls || url.includes('.m3u8')) {
+        // 1. Direct HLS (.m3u8)
+        if(url.includes('.m3u8')) {
             wrapper.style.display = 'block';
             if(Hls.isSupported()) {
                 const video = document.createElement('video');
@@ -508,16 +469,15 @@
                 hls.on(Hls.Events.ERROR, (e, data) => {
                     if(data.fatal) showStatus("Stream Error: " + data.type, 'error');
                 });
-                showStatus("Playing Direct Stream (HLS)", "info");
+                showStatus("Playing Converted Stream", "info");
             } else if (wrapper.canPlayType('application/vnd.apple.mpegurl')) {
-                // Safari
                 wrapper.innerHTML = `<video src="${url}" controls autoplay style="width:100%;height:100%"></video>`;
             }
             updateFavBtnState();
             return;
         }
 
-        // Standard Embed Handling
+        // 2. YouTube
         const ytId = getYouTubeID(url);
         if (ytId) {
             wrapper.style.display = 'block';
@@ -526,6 +486,7 @@
             return;
         }
         
+        // 3. Direct File
         if (url.match(/\.(mp4|webm|ogg)($|\?)/i)) {
             wrapper.style.display = 'block';
             wrapper.innerHTML = `<video controls autoplay><source src="${url}" type="video/mp4"></video>`;
@@ -533,6 +494,7 @@
             return;
         }
 
+        // 4. Fallback Embed
         const embedUrl = getSmartEmbedURL(url) || url;
         currentEmbedUrl = embedUrl; 
         
@@ -607,7 +569,7 @@
     function showStatus(msg, type) {
         const el = document.getElementById('statusMsg');
         el.innerText = msg; el.className = 'status-msg ' + type; el.style.display = 'block';
-        setTimeout(() => el.style.display = 'none', 4000);
+        setTimeout(() => el.style.display = 'none', 6000);
     }
 </script>
 </body>
