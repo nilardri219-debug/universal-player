@@ -132,7 +132,7 @@
                 <!-- Controls & Meta -->
                 <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
                     <div class="flex gap-2 items-center">
-                        <!-- QUALITY SELECTOR (Updated layout) -->
+                        <!-- QUALITY SELECTOR -->
                         <div id="quality-control" class="hidden flex items-center gap-2">
                             <label class="text-sm font-semibold text-gray-400"><i class="fa-solid fa-gear"></i> Quality:</label>
                             <select id="quality-select" class="bg-gray-800 text-white text-sm rounded-md border border-gray-700 px-2 py-1 focus:outline-none focus:border-brand-500 cursor-pointer">
@@ -239,7 +239,6 @@
                     } else {
                         if (this.dbUnsubscribe) this.dbUnsubscribe();
                         this.data = { history: [], favorites: [], playlists: {} };
-                        // List rendering removed
                     }
                 });
             }
@@ -251,8 +250,6 @@
                         this.data.history = cloudData.history || [];
                         this.data.favorites = cloudData.favorites || [];
                         this.data.playlists = cloudData.playlists || {};
-                        // window.app.ui.renderList(); // UI removed
-                        // window.app.ui.updateFavButton(); // UI removed
                     }
                 });
             }
@@ -266,7 +263,6 @@
                         this.data.history.unshift(value); 
                         await docRef.set({ history: firebase.firestore.FieldValue.arrayUnion(value) }, { merge: true });
                     }
-                    // Other actions effectively disabled from UI
                 } catch (e) {
                     console.error("Sync Error", e);
                 }
@@ -286,7 +282,6 @@
                 this.reset();
                 window.app.store.currentVideo = url;
                 window.app.store.addAction('history', url);
-                // window.app.ui.updateFavButton(); // UI removed
 
                 if (url.includes('.m3u8')) this.playHLS(url);
                 else if (this.isYoutube(url)) this.playYoutube(url);
@@ -306,12 +301,24 @@
 
             playHLS(url) {
                 const video = document.createElement('video');
-                video.controls = true; video.autoplay = true;
+                video.controls = true; 
+                video.autoplay = true;
+                video.setAttribute('playsinline', '');
+                video.setAttribute('preload', 'auto'); // OPTIMIZATION: Force load
                 video.className = "w-full h-full object-contain";
                 this.container.appendChild(video);
 
                 if (Hls.isSupported()) {
-                    this.hls = new Hls();
+                    // OPTIMIZATION: Turbo Buffer Settings
+                    const hlsConfig = {
+                        maxBufferLength: 30, // 30s buffer
+                        maxMaxBufferLength: 600, // Up to 10 mins buffer
+                        enableWorker: true,
+                        lowLatencyMode: false, // Stability over speed
+                        backBufferLength: 90
+                    };
+
+                    this.hls = new Hls(hlsConfig);
                     this.hls.loadSource(url);
                     this.hls.attachMedia(video);
                     
@@ -338,7 +345,7 @@
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = url;
                 }
-                window.app.ui.toast("Playing HLS Stream");
+                window.app.ui.toast("Playing HLS Stream (Turbo Mode)");
             }
 
             playYoutube(url) {
@@ -347,7 +354,7 @@
             }
 
             playDirect(url) {
-                this.container.innerHTML = `<video src="${url}" controls autoplay class="w-full h-full object-contain"></video>`;
+                this.container.innerHTML = `<video src="${url}" controls autoplay preload="auto" playsinline class="w-full h-full object-contain"></video>`;
             }
 
             playEmbed(url) {
@@ -437,10 +444,7 @@
         }
 
         class UIManager {
-            constructor() {
-                this.currentListTab = 'history';
-                this.activePlaylist = null;
-            }
+            constructor() { }
 
             navigate(view) {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
@@ -476,10 +480,6 @@
                     btn.className = "fa-solid fa-right-to-bracket";
                 }
             }
-
-            // switchListTab removed (UI items removed)
-            // renderList removed (UI items removed)
-            // updateFavButton removed (UI items removed)
             
             toggleMobileMenu() {
                 const sidebar = document.querySelector('aside');
@@ -496,7 +496,8 @@
                 this.store = new AppStore();
                 this.player = new VideoEngine();
                 this.converter = new Converter();
-                // Data methods removed from UI access
+                // Data methods removed from UI
+                this.data = { toggleFavorite: () => {}, addToPlaylist: () => {} };
                 this.auth = {
                     toggle: () => {
                         if (this.store.user) {
