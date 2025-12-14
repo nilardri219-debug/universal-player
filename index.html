@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
     
-    <!-- NUCLEAR OPTION: Hides your website from the video player to bypass "Embedding Disabled" errors -->
-    <meta name="referrer" content="no-referrer">
-    
-    <!-- SPEED BOOST: Pre-connect to YouTube servers -->
+    <!-- SPEED BOOST: Pre-connect -->
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
     
@@ -120,7 +117,7 @@
             border-radius: 8px;
             overflow: hidden;
             display: none;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         #player-wrapper iframe, 
@@ -129,6 +126,38 @@
             top: 0; left: 0; width: 100%; height: 100%; border: none;
         }
         
+        /* Pop-out / Fallback Controls */
+        #fallback-container {
+            display: none;
+            margin-bottom: 25px;
+            background: #3a3a3a;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f0ad4e;
+            text-align: left;
+        }
+        
+        .fallback-text {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .popout-btn {
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .popout-btn:hover { background: #218838; }
+
         .status-msg {
             margin-top: 10px;
             margin-bottom: 10px;
@@ -236,6 +265,15 @@
     <div id="statusMsg" class="status-msg"></div>
 
     <div id="player-wrapper"></div>
+    
+    <!-- Robust Fallback Section -->
+    <div id="fallback-container">
+        <span class="fallback-text">
+            <strong>Video blocked?</strong> Sites like xHamster often block embedding.
+            <br>Click below to open a clean popup player instead.
+        </span>
+        <button id="popout-btn" class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
+    </div>
 
     <div class="history-section">
         <div class="history-header">
@@ -272,6 +310,7 @@
 
     let currentUser = null;
     let historyUnsubscribe = null;
+    let currentVideoUrl = ""; // Store for popup player
 
     // --- 2. AUTHENTICATION LOGIC ---
     auth.onAuthStateChanged((user) => {
@@ -322,7 +361,7 @@
         }
     }
 
-    // --- 3. DATABASE LOGIC (Firestore) ---
+    // --- 3. DATABASE LOGIC ---
     function subscribeToHistory(uid) {
         const userDoc = db.collection('users').doc(uid);
 
@@ -419,11 +458,15 @@
 
     function loadPlayer(url) {
         const wrapper = document.getElementById('player-wrapper');
+        const fallbackContainer = document.getElementById('fallback-container');
         const statusMsg = document.getElementById('statusMsg');
         
+        // Reset UI
         wrapper.innerHTML = '';
         wrapper.style.display = 'none';
         statusMsg.style.display = 'none';
+        fallbackContainer.style.display = 'none';
+        currentVideoUrl = url; // Save for popout
 
         // 1. YouTube
         const youtubeId = getYouTubeID(url);
@@ -452,35 +495,54 @@
             return true;
         }
 
-        // 3. SMART EMBED CONVERTER (RE-ENGINEERED)
+        // 3. SMART EMBED CONVERTER
         const smartEmbed = getSmartEmbedURL(url);
         if (smartEmbed) {
+            // Check for popout logic update: we set the currentVideoUrl to the EMBED version for the popup
+            currentVideoUrl = smartEmbed;
+            
             wrapper.style.display = 'block';
-            // Important: We use no-referrer and allow-scripts
+            // Note: Changed referrerpolicy to 'origin' which is sometimes better accepted than 'no-referrer'
+            // Added allow-top-navigation just in case
             wrapper.innerHTML = `
                 <iframe 
                     src="${smartEmbed}" 
                     frameborder="0" 
                     loading="eager"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation allow-top-navigation"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
+                    allowfullscreen
+                    referrerpolicy="origin">
                 </iframe>`;
-            showStatus("Found Embed ID. Playing...", "info");
+            
+            showStatus("Attempting embed... If blocked, use the Launch button below.", "info");
+            
+            // ALWAYS show fallback for adult sites as they block embedding frequently
+            fallbackContainer.style.display = 'block';
             return true;
         }
 
-        // 4. Universal Fallback
+        // 4. Fallback
         wrapper.style.display = 'block';
         wrapper.innerHTML = `
             <iframe 
                 src="${url}" 
                 frameborder="0" 
                 loading="eager"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
+                allowfullscreen
+                referrerpolicy="origin">
             </iframe>`;
-        showStatus("Could not find video ID. Trying standard load...", "info");
+        showStatus("Loading generic link.", "info");
+        fallbackContainer.style.display = 'block';
         return true;
+    }
+
+    function openPopupPlayer() {
+        if (!currentVideoUrl) return;
+        // Open in a decent sized popup window
+        window.open(currentVideoUrl, 'VideoPlayer', 'width=854,height=480,resizable=yes,scrollbars=yes');
     }
 
     // --- HELPER FUNCTIONS ---
@@ -489,26 +551,18 @@
         try {
             const urlObj = new URL(url);
             const domain = urlObj.hostname.toLowerCase();
-            const cleanPath = urlObj.pathname.replace(/\/$/, ''); // Remove trailing slash
+            const cleanPath = urlObj.pathname.replace(/\/$/, ''); 
 
-            // --- PORNHUB ---
             if (domain.includes('pornhub')) {
                 const viewKey = url.match(/viewkey=([^&]+)/);
                 if (viewKey && viewKey[1]) return `https://www.pornhub.com/embed/${viewKey[1]}`;
             }
 
-            // --- XHAMSTER ---
             if (domain.includes('xhamster')) {
-                // Case A: /videos/video-name-12345
-                // Matches digits at the very end of the path
-                let idMatch = cleanPath.match(/-(\d+)$/);
+                // Aggressive ID finder: "xh" followed by Alphanumeric
+                let idMatch = cleanPath.match(/(xh[a-zA-Z0-9]+)/);
                 
-                // Case B: /videos/video-name-xh12345 (XH IDs)
-                if (!idMatch) {
-                     idMatch = cleanPath.match(/-((?:xh)?[a-zA-Z0-9]+)$/);
-                }
-                
-                // Fallback: Check if URL *ends* with numbers even if format is weird
+                // Fallback: Just digits at end of string
                 if (!idMatch) {
                     idMatch = cleanPath.match(/(\d+)$/);
                 }
@@ -518,15 +572,12 @@
                 }
             }
 
-            // --- XVIDEOS ---
             if (domain.includes('xvideos')) {
                 const id = url.match(/video(\d+)/);
                 if (id && id[1]) return `https://www.xvideos.com/embedframe/${id[1]}`;
             }
 
-            // --- SPANKBANG ---
             if (domain.includes('spankbang')) {
-                // /12a34/video/title -> ID is 12a34
                 const match = url.match(/\/([\w\d]+)\/video/);
                 if (match && match[1]) return `https://spankbang.com/${match[1]}/embed/`;
             }
