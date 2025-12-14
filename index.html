@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
     
+    <!-- NUCLEAR OPTION: Global Referrer Hide -->
     <meta name="referrer" content="no-referrer">
+    
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
 
+    <!-- HLS.js Library for Direct Streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
@@ -70,6 +73,13 @@
         .converter-title { color: #f0ad4e; margin: 0 0 10px 0; font-size: 16px; }
         .converter-desc { font-size: 12px; color: #ccc; margin-bottom: 10px; }
 
+        /* --- Result Section --- */
+        .result-area {
+            display: none; margin-top: 15px; padding: 10px; background: #222; border-radius: 5px; border: 1px solid #4caf50;
+        }
+        .result-label { font-size: 12px; color: #aaa; margin-bottom: 5px; display: block; }
+        .result-input { width: 100%; background: #111; color: #4caf50; border: none; margin-bottom: 0 !important; }
+
         #player-wrapper {
             width: 100%; position: relative; padding-bottom: 56.25%; height: 0;
             background: #000; border-radius: 8px; overflow: hidden; display: none; margin-bottom: 15px;
@@ -110,6 +120,8 @@
         /* Fallback */
         #fallback-container { display: none; margin-bottom: 20px; text-align: center; background: #333; padding: 15px; border-radius: 8px; border: 1px solid #444; }
         .popout-btn { background: #d9534f; color: white; padding: 12px 24px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .sniffer-btn { background: #666; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px; border: 1px solid #888; display: inline-block; cursor: grab; }
+        
         .status-msg { margin: 10px 0; padding: 10px; border-radius: 5px; display: none; font-size: 14px; word-break: break-all; }
         .info { background: #17a2b8; } .error { background: #d9534f; } .success { background: #28a745; }
         .empty-state { padding: 20px; text-align: center; color: #777; font-style: italic; }
@@ -126,27 +138,38 @@
         <button id="authBtn" class="btn-auth" onclick="handleAuth()">Sign in with Google</button>
     </div>
 
-    <!-- MAIN PLAYER SECTION -->
+    <!-- CONVERTER SECTION -->
     <div class="converter-box">
         <h3 class="converter-title">🔗 Video Link to M3U8 Converter</h3>
-        <p class="converter-desc">Paste a website link below. We will try to extract the .m3u8 stream automatically.</p>
+        <p class="converter-desc">Paste a website link below to extract the stream link.</p>
         
         <div class="input-group">
-            <input type="text" id="convertInput" placeholder="https://xhamster.com/videos/...">
-            <button id="convertBtn" class="play-btn" style="background: #f0ad4e;" onclick="attemptConversion()">⚡ Convert & Play</button>
+            <input type="text" id="convertInput" placeholder="https://website.com/video...">
+            <button id="convertBtn" class="play-btn" style="background: #f0ad4e;" onclick="attemptConversion()">⚡ Get Stream Link</button>
         </div>
         
-        <!-- Manual Bookmarklet fallback -->
-        <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555;">
-            <p style="font-size:11px; color:#aaa; margin:0;">
-                If auto-convert fails (due to security), drag this button to your bookmarks bar and click it on the video site:
-                <a style="background:#555; color:#fff; padding:2px 6px; border-radius:3px; text-decoration:none; margin-left:5px;" href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{alert('No stream found yet. 1. Play the video. 2. Click this bookmark again.')}})">🕵️ Stream Sniffer</a>
+        <!-- Result Area -->
+        <div id="conversionResult" class="result-area">
+            <span class="result-label">✅ Stream Link Found! Copy below:</span>
+            <div class="input-group" style="margin-bottom:0;">
+                <input type="text" id="extractedUrl" class="result-input" readonly>
+                <button class="play-btn" style="background: #4caf50;" onclick="copyToClipboard()">📋 Copy</button>
+            </div>
+        </div>
+
+        <!-- Manual Fallback (Upgraded) -->
+        <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #555;">
+            <p style="font-size:12px; color:#aaa; margin:0 0 5px 0;">
+                <strong>Auto-scan failed?</strong> (This happens if the site is very secure).
+                <br>Drag this button to your bookmarks bar for a 100% working manual fix:
             </p>
+            <a class="sniffer-btn" href="javascript:(function(){var urls=[];var p=performance.getEntriesByType('resource');for(var i=0;i<p.length;i++){if(p[i].name.indexOf('.m3u8')>-1)urls.push(p[i].name)}var v=document.getElementsByTagName('video');for(var i=0;i<v.length;i++){if(v[i].src&&v[i].src.indexOf('.m3u8')>-1)urls.push(v[i].src);if(v[i].currentSrc&&v[i].currentSrc.indexOf('.m3u8')>-1)urls.push(v[i].currentSrc)}urls=[...new Set(urls)];if(urls.length){prompt('Stream URL found! Copy this:',urls[urls.length-1])}else{alert('No .m3u8 found yet. 1. Ensure video is PLAYING. 2. Click bookmark again.')}})()">🕵️ Smart Sniffer</a>
         </div>
     </div>
 
+    <!-- MAIN PLAYER -->
     <div class="input-group">
-        <input type="text" id="videoLink" placeholder="Direct Player Input (.m3u8, mp4, YouTube)...">
+        <input type="text" id="videoLink" placeholder="Paste the copied .m3u8 link here to play...">
         <button class="play-btn" onclick="playVideo()">Play</button>
     </div>
     
@@ -380,47 +403,58 @@
         }
     }
 
-    // --- 6. AUTO CONVERTER LOGIC (NEW) ---
+    // --- 6. AUTO CONVERTER (Stronger Proxy) ---
     async function attemptConversion() {
         const rawInput = document.getElementById('convertInput').value.trim();
         const btn = document.getElementById('convertBtn');
+        const resBox = document.getElementById('conversionResult');
+        const outInput = document.getElementById('extractedUrl');
+        
         if (!rawInput) return;
 
-        btn.innerText = "⏳ Scanning...";
+        resBox.style.display = 'none';
+        outInput.value = '';
+        btn.innerText = "⏳ Scanning with Proxy...";
         btn.disabled = true;
-        showStatus("Scanning website for m3u8 stream...", "info");
+        showStatus("Scanning website for m3u8...", "info");
 
-        // Use a CORS proxy to fetch the HTML content
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rawInput)}`;
+        // Use CorsProxy.io (Stronger than allorigins)
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rawInput)}`;
 
         try {
+            // Fetch as text to read source code
             const response = await fetch(proxyUrl);
-            const data = await response.json();
+            const text = await response.text();
             
-            if (data.contents) {
-                // REGEX: Look for links ending in .m3u8 or .m3u8?token=...
-                // Many sites put this in window.initialState or similar JS variables
-                const m3u8Match = data.contents.match(/(https?:\/\/[^"'\s]+\.m3u8[^"'\s]*)/);
+            if (text) {
+                // Look for links ending in .m3u8 inside quotes or similar
+                const m3u8Match = text.match(/(https?:\/\/[^"'\s]+\.m3u8[^"'\s]*)/);
                 
                 if (m3u8Match && m3u8Match[0]) {
-                    // Clean up potential escape characters (backslashes)
-                    const cleanUrl = m3u8Match[0].replace(/\\/g, '');
-                    showStatus("Success! Stream found.", "success");
-                    document.getElementById('videoLink').value = cleanUrl;
-                    playVideo();
+                    const cleanUrl = m3u8Match[0].replace(/\\/g, ''); // Remove escape chars
+                    outInput.value = cleanUrl;
+                    resBox.style.display = 'block'; 
+                    showStatus("Success! Link found.", "success");
                 } else {
-                    showStatus("Could not auto-detect stream. Site is likely protected. Use the Sniffer bookmarklet below.", "error");
+                    throw new Error("No .m3u8 link found in source");
                 }
             } else {
-                throw new Error("No data returned");
+                throw new Error("Empty response");
             }
         } catch (e) {
             console.error(e);
-            showStatus("Scan failed (CORS/Blocking). Try the manual Sniffer bookmarklet.", "error");
+            showStatus("Auto-scan blocked by site security. Use the 'Smart Sniffer' bookmark below.", "error");
         } finally {
-            btn.innerText = "⚡ Convert & Play";
+            btn.innerText = "⚡ Get Stream Link";
             btn.disabled = false;
         }
+    }
+
+    function copyToClipboard() {
+        const copyText = document.getElementById("extractedUrl");
+        copyText.select();
+        document.execCommand("copy");
+        showStatus("Copied! Paste in player below.", "success");
     }
 
     // --- 7. PLAYER LOGIC ---
@@ -452,7 +486,7 @@
         wrapper.innerHTML = ''; wrapper.style.display = 'none';
         fallback.style.display = 'none'; statusMsg.style.display = 'none';
 
-        // 1. Direct HLS (.m3u8)
+        // 1. Direct HLS
         if(url.includes('.m3u8')) {
             wrapper.style.display = 'block';
             if(Hls.isSupported()) {
@@ -469,7 +503,7 @@
                 hls.on(Hls.Events.ERROR, (e, data) => {
                     if(data.fatal) showStatus("Stream Error: " + data.type, 'error');
                 });
-                showStatus("Playing Converted Stream", "info");
+                showStatus("Playing Stream...", "info");
             } else if (wrapper.canPlayType('application/vnd.apple.mpegurl')) {
                 wrapper.innerHTML = `<video src="${url}" controls autoplay style="width:100%;height:100%"></video>`;
             }
