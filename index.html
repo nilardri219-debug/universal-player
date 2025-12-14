@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Video Player</title>
     
-    <!-- NUCLEAR OPTION: Global Referrer Hide -->
     <meta name="referrer" content="no-referrer">
-    
     <link rel="preconnect" href="https://www.youtube-nocookie.com">
     <link rel="preconnect" href="https://www.google.com">
 
-    <!-- HLS.js Library for Direct Streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
@@ -140,36 +137,36 @@
 
     <!-- CONVERTER SECTION -->
     <div class="converter-box">
-        <h3 class="converter-title">🔗 Video Link to M3U8 Converter</h3>
-        <p class="converter-desc">Paste a website link below to extract the stream link.</p>
+        <h3 class="converter-title">🔗 Smart Link Converter</h3>
+        <p class="converter-desc">Paste a regular video link. We will instantly calculate the best playable link for you.</p>
         
         <div class="input-group">
-            <input type="text" id="convertInput" placeholder="https://website.com/video...">
-            <button id="convertBtn" class="play-btn" style="background: #f0ad4e;" onclick="attemptConversion()">⚡ Get Stream Link</button>
+            <input type="text" id="convertInput" placeholder="https://xhamster.com/videos/...">
+            <button id="convertBtn" class="play-btn" style="background: #f0ad4e;" onclick="smartConvert()">✨ Convert</button>
         </div>
         
         <!-- Result Area -->
         <div id="conversionResult" class="result-area">
-            <span class="result-label">✅ Stream Link Found! Copy below:</span>
+            <span class="result-label">✅ Clean Link Generated! Copy below:</span>
             <div class="input-group" style="margin-bottom:0;">
                 <input type="text" id="extractedUrl" class="result-input" readonly>
                 <button class="play-btn" style="background: #4caf50;" onclick="copyToClipboard()">📋 Copy</button>
             </div>
+            <p style="font-size:11px; color:#aaa; margin:5px 0 0 0;">* Paste this into the player below. If it fails, use the Pop-out button.</p>
         </div>
 
-        <!-- Manual Fallback (Upgraded) -->
+        <!-- Manual Fallback -->
         <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #555;">
-            <p style="font-size:12px; color:#aaa; margin:0 0 5px 0;">
-                <strong>Auto-scan failed?</strong> (This happens if the site is very secure).
-                <br>Drag this button to your bookmarks bar for a 100% working manual fix:
+            <p style="font-size:11px; color:#777; margin:0;">
+                Advanced: For raw .m3u8 streams, drag this to your bookmarks: 
+                <a class="sniffer-btn" href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{alert('No stream found yet. 1. Play the video. 2. Click this bookmark again.')}})">🕵️ Sniffer</a>
             </p>
-            <a class="sniffer-btn" href="javascript:(function(){var urls=[];var p=performance.getEntriesByType('resource');for(var i=0;i<p.length;i++){if(p[i].name.indexOf('.m3u8')>-1)urls.push(p[i].name)}var v=document.getElementsByTagName('video');for(var i=0;i<v.length;i++){if(v[i].src&&v[i].src.indexOf('.m3u8')>-1)urls.push(v[i].src);if(v[i].currentSrc&&v[i].currentSrc.indexOf('.m3u8')>-1)urls.push(v[i].currentSrc)}urls=[...new Set(urls)];if(urls.length){prompt('Stream URL found! Copy this:',urls[urls.length-1])}else{alert('No .m3u8 found yet. 1. Ensure video is PLAYING. 2. Click bookmark again.')}})()">🕵️ Smart Sniffer</a>
         </div>
     </div>
 
     <!-- MAIN PLAYER -->
     <div class="input-group">
-        <input type="text" id="videoLink" placeholder="Paste the copied .m3u8 link here to play...">
+        <input type="text" id="videoLink" placeholder="Paste link here to play...">
         <button class="play-btn" onclick="playVideo()">Play</button>
     </div>
     
@@ -403,50 +400,24 @@
         }
     }
 
-    // --- 6. AUTO CONVERTER (Stronger Proxy) ---
-    async function attemptConversion() {
+    // --- 6. SMART CONVERTER (Regex Method - No Scanning) ---
+    function smartConvert() {
         const rawInput = document.getElementById('convertInput').value.trim();
-        const btn = document.getElementById('convertBtn');
         const resBox = document.getElementById('conversionResult');
         const outInput = document.getElementById('extractedUrl');
         
         if (!rawInput) return;
 
-        resBox.style.display = 'none';
-        outInput.value = '';
-        btn.innerText = "⏳ Scanning with Proxy...";
-        btn.disabled = true;
-        showStatus("Scanning website for m3u8...", "info");
+        // Try to generate an Embed URL using the smart logic
+        const smartLink = getSmartEmbedURL(rawInput);
 
-        // Use CorsProxy.io (Stronger than allorigins)
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rawInput)}`;
-
-        try {
-            // Fetch as text to read source code
-            const response = await fetch(proxyUrl);
-            const text = await response.text();
-            
-            if (text) {
-                // Look for links ending in .m3u8 inside quotes or similar
-                const m3u8Match = text.match(/(https?:\/\/[^"'\s]+\.m3u8[^"'\s]*)/);
-                
-                if (m3u8Match && m3u8Match[0]) {
-                    const cleanUrl = m3u8Match[0].replace(/\\/g, ''); // Remove escape chars
-                    outInput.value = cleanUrl;
-                    resBox.style.display = 'block'; 
-                    showStatus("Success! Link found.", "success");
-                } else {
-                    throw new Error("No .m3u8 link found in source");
-                }
-            } else {
-                throw new Error("Empty response");
-            }
-        } catch (e) {
-            console.error(e);
-            showStatus("Auto-scan blocked by site security. Use the 'Smart Sniffer' bookmark below.", "error");
-        } finally {
-            btn.innerText = "⚡ Get Stream Link";
-            btn.disabled = false;
+        if (smartLink) {
+            outInput.value = smartLink;
+            resBox.style.display = 'block';
+            showStatus("Link Converted! Use this in the player.", "success");
+        } else {
+            showStatus("Could not auto-convert. Please use the Sniffer bookmarklet.", "error");
+            resBox.style.display = 'none';
         }
     }
 
@@ -528,7 +499,8 @@
             return;
         }
 
-        // 4. Fallback Embed
+        // 4. Fallback Embed (Smart URL handled here)
+        // If user pasted a raw link (not converted), we convert it on the fly too
         const embedUrl = getSmartEmbedURL(url) || url;
         currentEmbedUrl = embedUrl; 
         
@@ -538,7 +510,7 @@
         if(isStrict) {
              fallback.innerHTML = `
                 <p style="margin:0 0 8px 0; color:#ffc107; font-size:14px;">
-                    <strong>⚠️ Restricted Site:</strong> If the screen is black, use the Pop-out player.
+                    <strong>⚠️ Note:</strong> If the screen is black, this site requires the Pop-out player.
                 </p>
                 <button class="popout-btn" onclick="openPopupPlayer()">🚀 Launch Pop-out Player</button>
             `;
