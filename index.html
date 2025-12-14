@@ -451,11 +451,11 @@
             return true;
         }
 
-        // 3. SMART EMBED CONVERTER (Handles .com, .desi, .net, etc.)
+        // 3. SMART EMBED CONVERTER (Automatic fix for security blocks)
         const smartEmbed = getSmartEmbedURL(url);
         if (smartEmbed) {
             wrapper.style.display = 'block';
-            // We use 'no-referrer' to try and bypass some blocklists
+            // IMPORTANT: We use 'no-referrer' to prevent the site from blocking your 'desi' source
             wrapper.innerHTML = `
                 <iframe 
                     src="${smartEmbed}" 
@@ -489,34 +489,36 @@
     function getSmartEmbedURL(url) {
         try {
             const urlObj = new URL(url);
-            const domain = urlObj.hostname; // e.g., "xhamster.desi", "www.pornhub.com"
+            const domain = urlObj.hostname;
 
-            // Pornhub (works on .com, .net, .org, etc.)
+            // Pornhub: Force .com domain
             if (domain.includes('pornhub')) {
                 const viewKey = url.match(/viewkey=([^&]+)/);
-                if (viewKey && viewKey[1]) return `https://${domain}/embed/${viewKey[1]}`;
+                if (viewKey && viewKey[1]) return `https://www.pornhub.com/embed/${viewKey[1]}`;
             }
 
-            // XHamster (works on .com, .desi, .one, etc.)
+            // XHamster: Force .com domain (fixes .desi/.one blocking issues)
             if (domain.includes('xhamster')) {
-                // Matches last numbers in URL (the video ID)
-                const idMatch = url.match(/(\d+)$/); 
-                const id = idMatch ? idMatch[1] : null;
+                // Find ID: looks for digits at the end of the path or before '?'
+                // Handles URLs like /videos/video-name-12345?foo=bar
+                const idMatch = url.match(/(\d+)(?:$|\?|\/)/); 
+                // Fallback for more complex paths
+                const id = idMatch ? idMatch[1] : url.match(/videos\/.*?(\d+)/)?.[1];
                 
-                // If we found an ID, construct the embed URL
-                if (id) return `https://${domain}/embed/${id}`;
+                // FORCE xhamster.com
+                if (id) return `https://xhamster.com/embed/${id}`;
             }
 
             // XVideos
             if (domain.includes('xvideos')) {
                 const id = url.match(/video(\d+)/);
-                if (id && id[1]) return `https://${domain}/embedframe/${id[1]}`;
+                if (id && id[1]) return `https://www.xvideos.com/embedframe/${id[1]}`;
             }
 
             // SpankBang
             if (domain.includes('spankbang')) {
                 const match = url.match(/\/([\w\d]+)\/video/);
-                if (match && match[1]) return `https://${domain}/${match[1]}/embed/`;
+                if (match && match[1]) return `https://spankbang.com/${match[1]}/embed/`;
             }
 
         } catch (e) {
@@ -540,3 +542,5 @@
         setTimeout(() => { el.style.display = 'none'; }, 5000);
     }
 </script>
+</body>
+</html>
