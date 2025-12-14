@@ -423,28 +423,9 @@
         wrapper.style.display = 'none';
         statusMsg.style.display = 'none';
 
-        // 1. SMART AUTO-CONVERT (Fixes "No Embed Option" issue)
-        // If you paste a normal page link, this converts it to an embed link.
-        const smartEmbed = getSmartEmbedURL(url);
-        if (smartEmbed) {
-            wrapper.style.display = 'block';
-            wrapper.innerHTML = `
-                <iframe 
-                    src="${smartEmbed}" 
-                    frameborder="0" 
-                    loading="eager"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    referrerpolicy="no-referrer">
-                </iframe>`;
-            showStatus("Auto-converted to embed mode.", "info");
-            return true;
-        }
-
+        // 1. YouTube Link Check
         const youtubeId = getYouTubeID(url);
-
         if (youtubeId) {
-            // 2. YouTube
             wrapper.style.display = 'block';
             wrapper.innerHTML = `
                 <iframe 
@@ -457,9 +438,10 @@
                     referrerpolicy="strict-origin-when-cross-origin">
                 </iframe>`;
             return true;
-        } 
-        // 3. Direct Files (Updated regex to handle ?token=123 queries)
-        else if (url.match(/\.(mp4|webm|ogg)($|\?)/i) || url.includes('blob:')) {
+        }
+
+        // 2. Direct File Check (mp4, m3u8, etc.)
+        if (url.match(/\.(mp4|webm|ogg|m3u8)($|\?)/i) || url.includes('blob:')) {
             wrapper.style.display = 'block';
             wrapper.innerHTML = `
                 <video controls autoplay preload="auto">
@@ -467,46 +449,79 @@
                     Your browser does not support the video tag.
                 </video>`;
             return true;
-        } 
-        else {
-            // 4. Universal Fallback
+        }
+
+        // 3. SMART EMBED CONVERTER (Handles .com, .desi, .net, etc.)
+        const smartEmbed = getSmartEmbedURL(url);
+        if (smartEmbed) {
             wrapper.style.display = 'block';
+            // We use 'no-referrer' to try and bypass some blocklists
             wrapper.innerHTML = `
                 <iframe 
-                    src="${url}" 
+                    src="${smartEmbed}" 
                     frameborder="0" 
                     loading="eager"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen
                     referrerpolicy="no-referrer">
                 </iframe>`;
-            showStatus("Attempting to load generic link.", "info");
+            showStatus("Converted to embed player automatically.", "info");
             return true;
         }
+
+        // 4. Fallback (Just try to show the link)
+        wrapper.style.display = 'block';
+        wrapper.innerHTML = `
+            <iframe 
+                src="${url}" 
+                frameborder="0" 
+                loading="eager"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen
+                referrerpolicy="no-referrer">
+            </iframe>`;
+        showStatus("Attempting to load generic link.", "info");
+        return true;
     }
 
     // --- HELPER FUNCTIONS ---
 
     function getSmartEmbedURL(url) {
-        // Pornhub: view_video.php?viewkey=... -> /embed/...
-        if (url.includes('pornhub.com/view_video.php')) {
-            const viewKey = url.match(/viewkey=([^&]+)/);
-            if (viewKey && viewKey[1]) return `https://www.pornhub.com/embed/${viewKey[1]}`;
-        }
-        // XHamster: /videos/video-name-123 -> /embed/123
-        if (url.includes('xhamster.com/videos/')) {
-            const id = url.match(/xhamster\.com\/videos\/(?:.*-)?(\d+)$/);
-            if (id && id[1]) return `https://xhamster.com/embed/${id[1]}`;
-        }
-        // XVideos: /video123/name -> /embedframe/123
-        if (url.includes('xvideos.com/video')) {
-            const id = url.match(/xvideos\.com\/video(\d+)/);
-            if (id && id[1]) return `https://www.xvideos.com/embedframe/${id[1]}`;
-        }
-        // SpankBang: /123/video/name -> /123/embed/
-        if (url.includes('spankbang.com')) {
-            const match = url.match(/spankbang\.com\/([\w\d]+)\/video/);
-            if (match && match[1]) return `https://spankbang.com/${match[1]}/embed/`;
+        try {
+            const urlObj = new URL(url);
+            const domain = urlObj.hostname; // e.g., "xhamster.desi", "www.pornhub.com"
+
+            // Pornhub (works on .com, .net, .org, etc.)
+            if (domain.includes('pornhub')) {
+                const viewKey = url.match(/viewkey=([^&]+)/);
+                if (viewKey && viewKey[1]) return `https://${domain}/embed/${viewKey[1]}`;
+            }
+
+            // XHamster (works on .com, .desi, .one, etc.)
+            if (domain.includes('xhamster')) {
+                // Matches last numbers in URL (the video ID)
+                const idMatch = url.match(/(\d+)$/); 
+                const id = idMatch ? idMatch[1] : null;
+                
+                // If we found an ID, construct the embed URL
+                if (id) return `https://${domain}/embed/${id}`;
+            }
+
+            // XVideos
+            if (domain.includes('xvideos')) {
+                const id = url.match(/video(\d+)/);
+                if (id && id[1]) return `https://${domain}/embedframe/${id[1]}`;
+            }
+
+            // SpankBang
+            if (domain.includes('spankbang')) {
+                const match = url.match(/\/([\w\d]+)\/video/);
+                if (match && match[1]) return `https://${domain}/${match[1]}/embed/`;
+            }
+
+        } catch (e) {
+            console.error("URL Parse Error", e);
+            return null;
         }
         return null;
     }
