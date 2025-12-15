@@ -1,677 +1,517 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudStream Pro</title>
-    
-    <!-- SECURITY: Hides referrer to bypass simple hotlink blocks -->
-    <meta name="referrer" content="no-referrer">
-    
-    <!-- PRECONNECT: Optimization -->
-    <link rel="preconnect" href="https://www.youtube-nocookie.com">
-    <link rel="preconnect" href="https://www.google.com">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudStream Pro</title>
+    
+    <!-- SECURITY: Hides referrer to bypass simple hotlink blocks -->
+    <meta name="referrer" content="no-referrer">
+    
+    <!-- PRECONNECT: Optimization -->
+    <link rel="preconnect" href="https://www.youtube-nocookie.com">
+    <link rel="preconnect" href="https://www.google.com">
 
-    <!-- LIBRARIES -->
-    <!-- Tailwind CSS for Professional Styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        gray: { 750: '#2d3748', 850: '#1a202c', 950: '#171923' },
-                        brand: { 500: '#3b82f6', 600: '#2563eb' }
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Toastify for Notifications -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- LIBRARIES -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: { 750: '#2d3748', 850: '#1a202c', 950: '#171923' },
+                        brand: { 500: '#3b82f6', 600: '#2563eb' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Toastify -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-    <!-- HLS.js for Streaming -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- HLS.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-    <style>
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #1a202c; }
-        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #718096; }
-        
-        /* Animations */
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .loader {
-            border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%;
-            width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1a202c; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%;
+            width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
 <body class="bg-gray-950 text-gray-200 font-sans h-screen flex overflow-hidden">
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col hidden md:flex">
-        <div class="p-6 border-b border-gray-800 flex items-center gap-3">
-            <i class="fa-solid fa-cloud text-brand-500 text-2xl"></i>
-            <h1 class="text-xl font-bold text-white tracking-tight">CloudStream</h1>
-        </div>
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col hidden md:flex">
+        <div class="p-6 border-b border-gray-800 flex items-center gap-3">
+            <i class="fa-solid fa-cloud text-brand-500 text-2xl"></i>
+            <h1 class="text-xl font-bold text-white tracking-tight">CloudStream</h1>
+        </div>
 
-        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-            <button onclick="app.ui.navigate('player')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3 bg-gray-800 text-white">
-                <i class="fa-solid fa-play-circle w-6"></i> Player
-            </button>
-            <button onclick="app.ui.navigate('converter')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
-                <i class="fa-solid fa-wand-magic-sparkles w-6"></i> Converter
-            </button>
-            
-            <div class="pt-4 pb-2 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Library</div>
-            
-            <button onclick="app.ui.switchListTab('history')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
-                <i class="fa-solid fa-clock-rotate-left w-6"></i> History
-            </button>
-            <button onclick="app.ui.switchListTab('favorites')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
-                <i class="fa-solid fa-star w-6"></i> Favorites
-            </button>
-            <button onclick="app.ui.switchListTab('playlists')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
-                <i class="fa-solid fa-folder w-6"></i> Playlists
-            </button>
-        </nav>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+            <button onclick="window.app?.ui?.navigate('player')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3 bg-gray-800 text-white">
+                <i class="fa-solid fa-play-circle w-6"></i> Player
+            </button>
+            <button onclick="window.app?.ui?.navigate('converter')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition flex items-center gap-3">
+                <i class="fa-solid fa-wand-magic-sparkles w-6"></i> Converter
+            </button>
+        </nav>
 
-        <div class="p-4 border-t border-gray-800">
-            <div id="user-section" class="flex items-center gap-3 px-2 py-2">
-                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                    <i class="fa-solid fa-user text-xs"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p id="user-name" class="text-sm font-medium truncate">Guest</p>
-                    <p id="auth-status" class="text-xs text-gray-500 truncate">Not synced</p>
-                </div>
-                <button onclick="app.auth.toggle()" class="text-gray-400 hover:text-white">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                </button>
-            </div>
-        </div>
-    </aside>
+        <div class="p-4 border-t border-gray-800">
+            <div id="user-section" class="flex items-center gap-3 px-2 py-2">
+                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                    <i class="fa-solid fa-user text-xs"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="user-name" class="text-sm font-medium truncate">Guest</p>
+                    <p id="auth-status" class="text-xs text-gray-500 truncate">Not synced</p>
+                </div>
+                <button onclick="window.app?.auth?.toggle()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        
-        <!-- Mobile Header -->
-        <header class="md:hidden h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-cloud text-brand-500"></i>
-                <span class="font-bold">CloudStream</span>
-            </div>
-            <button onclick="app.ui.toggleMobileMenu()" class="text-gray-400 hover:text-white">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-        </header>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- Mobile Header -->
+        <header class="md:hidden h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-cloud text-brand-500"></i>
+                <span class="font-bold">CloudStream</span>
+            </div>
+            <button onclick="window.app?.ui?.toggleMobileMenu()" class="text-gray-400 hover:text-white">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </header>
 
-        <!-- Dynamic Views -->
-        <div id="view-container" class="flex-1 overflow-y-auto p-4 md:p-8 relative">
-            
-            <!-- VIEW: PLAYER -->
-            <div id="view-player" class="view-section max-w-5xl mx-auto fade-in">
-                <!-- Input Area -->
-                <div class="bg-gray-900 p-1 rounded-xl shadow-lg border border-gray-800 flex items-center mb-6">
-                    <div class="pl-4 text-gray-500"><i class="fa-solid fa-link"></i></div>
-                    <input type="text" id="videoInput" 
-                        class="flex-1 bg-transparent border-none text-white px-4 py-3 focus:outline-none placeholder-gray-600"
-                        placeholder="Paste YouTube, .m3u8, .mp4, or website link here...">
-                    <button onclick="app.player.playFromInput()" 
-                        class="bg-brand-600 hover:bg-brand-500 text-white px-6 py-2 rounded-lg font-bold transition m-1">
-                        Play
-                    </button>
-                </div>
+        <!-- Dynamic Views -->
+        <div id="view-container" class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+            
+            <!-- VIEW: PLAYER -->
+            <div id="view-player" class="view-section max-w-5xl mx-auto fade-in">
+                <!-- Input Area -->
+                <div class="bg-gray-900 p-1 rounded-xl shadow-lg border border-gray-800 flex items-center mb-6">
+                    <div class="pl-4 text-gray-500"><i class="fa-solid fa-link"></i></div>
+                    <input type="text" id="videoInput" 
+                        class="flex-1 bg-transparent border-none text-white px-4 py-3 focus:outline-none placeholder-gray-600"
+                        placeholder="Paste YouTube, .m3u8, .mp4, or website link here...">
+                    <button onclick="window.app?.player?.playFromInput()" 
+                        class="bg-brand-600 hover:bg-brand-500 text-white px-6 py-2 rounded-lg font-bold transition m-1">
+                        Play
+                    </button>
+                </div>
 
-                <!-- Video Container -->
-                <div id="video-container" class="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800 group">
-                    <div id="player-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-600">
-                        <i class="fa-solid fa-film text-6xl mb-4 opacity-50"></i>
-                        <p>Ready to play</p>
-                    </div>
-                    <div id="active-player" class="absolute inset-0 hidden"></div>
-                </div>
+                <!-- Video Container -->
+                <div id="video-container" class="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800 group">
+                    <div id="player-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-600">
+                        <i class="fa-solid fa-film text-6xl mb-4 opacity-50"></i>
+                        <p>Ready to play</p>
+                    </div>
+                    <div id="active-player" class="absolute inset-0 hidden"></div>
+                </div>
 
-                <!-- Controls & Meta -->
-                <div class="mt-4 flex items-center justify-between">
-                    <div class="flex gap-2">
-                        <button onclick="app.data.toggleFavorite()" id="btn-fav" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
-                            <i class="fa-regular fa-star"></i> Favorite
-                        </button>
-                        <button onclick="app.data.addToPlaylist()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition flex items-center gap-2">
-                            <i class="fa-regular fa-folder"></i> Add to Playlist
-                        </button>
-                    </div>
-                    
-                    <div id="fallback-trigger" class="hidden">
-                        <button onclick="app.player.openPopout()" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-external-link-alt"></i> Video blocked? Pop-out
-                        </button>
-                    </div>
-                </div>
+                <!-- Controls & Meta -->
+                <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex gap-2 items-center">
+                        <!-- QUALITY SELECTOR -->
+                        <div id="quality-control" class="hidden flex items-center gap-2">
+                            <label class="text-sm font-semibold text-gray-400"><i class="fa-solid fa-gear"></i> Quality:</label>
+                            <select id="quality-select" class="bg-gray-800 text-white text-sm rounded-md border border-gray-700 px-2 py-1 focus:outline-none focus:border-brand-500 cursor-pointer">
+                                <option value="-1">Auto</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="fallback-trigger" class="hidden">
+                        <button onclick="window.app?.player?.openPopout()" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-external-link-alt"></i> Video blocked? Pop-out
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                <!-- List Section (History/Favs) embedded below player -->
-                <div class="mt-8">
-                    <div class="flex border-b border-gray-800 mb-4">
-                        <button onclick="app.ui.switchListTab('history')" id="tab-history" class="list-tab px-4 py-2 text-brand-500 border-b-2 border-brand-500 font-medium">History</button>
-                        <button onclick="app.ui.switchListTab('favorites')" id="tab-favorites" class="list-tab px-4 py-2 text-gray-500 hover:text-gray-300 font-medium">Favorites</button>
-                        <button onclick="app.ui.switchListTab('playlists')" id="tab-playlists" class="list-tab px-4 py-2 text-gray-500 hover:text-gray-300 font-medium">Playlists</button>
-                    </div>
-                    <div id="list-content" class="bg-gray-900 rounded-xl border border-gray-800 min-h-[200px] max-h-[400px] overflow-y-auto p-2">
-                        <!-- Items injected here -->
-                        <div class="text-center py-10 text-gray-600 italic">No items yet.</div>
-                    </div>
-                </div>
-            </div>
+            <!-- VIEW: CONVERTER -->
+            <div id="view-converter" class="view-section max-w-3xl mx-auto fade-in hidden">
+                <div class="bg-gray-900 rounded-xl border border-gray-800 p-8">
+                    <h2 class="text-2xl font-bold text-brand-500 mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Link Converter</h2>
+                    <p class="text-gray-400 mb-6">Extract stream links (.m3u8) from websites securely.</p>
 
-            <!-- VIEW: CONVERTER -->
-            <div id="view-converter" class="view-section max-w-3xl mx-auto fade-in hidden">
-                <div class="bg-gray-900 rounded-xl border border-gray-800 p-8">
-                    <h2 class="text-2xl font-bold text-brand-500 mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Link Converter</h2>
-                    <p class="text-gray-400 mb-6">Extract stream links (.m3u8) from websites securely.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Target URL</label>
+                            <input type="text" id="convert-url" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3 focus:border-brand-500 focus:outline-none text-white" placeholder="https://site.com/video...">
+                        </div>
+                        <button onclick="window.app?.converter?.scan()" id="btn-scan" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2">
+                            <span>Start Scan</span>
+                        </button>
+                    </div>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-2">Target URL</label>
-                            <input type="text" id="convert-url" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-3 focus:border-brand-500 focus:outline-none text-white" placeholder="https://site.com/video...">
-                        </div>
-                        <button onclick="app.converter.scan()" id="btn-scan" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition flex justify-center items-center gap-2">
-                            <span>Start Scan</span>
-                        </button>
-                    </div>
+                    <div id="scan-result" class="mt-6 hidden p-4 bg-gray-950 rounded-lg border border-green-900">
+                        <p class="text-green-500 text-sm font-bold mb-2">✅ Stream Found!</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="scan-output" readonly class="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-2 text-xs text-gray-300 font-mono">
+                            <button onclick="window.app?.converter?.copyResult()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm"><i class="fa-regular fa-copy"></i></button>
+                            <button onclick="window.app?.converter?.playResult()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm font-bold">Play</button>
+                        </div>
+                    </div>
 
-                    <div id="scan-result" class="mt-6 hidden p-4 bg-gray-950 rounded-lg border border-green-900">
-                        <p class="text-green-500 text-sm font-bold mb-2">✅ Stream Found!</p>
-                        <div class="flex gap-2">
-                            <input type="text" id="scan-output" readonly class="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-2 text-xs text-gray-300 font-mono">
-                            <button onclick="app.converter.copyResult()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm"><i class="fa-regular fa-copy"></i></button>
-                            <button onclick="app.converter.playResult()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm font-bold">Play</button>
-                        </div>
-                    </div>
+                    <div class="mt-8 pt-6 border-t border-gray-800">
+                        <h3 class="font-bold text-gray-300 mb-2">Advanced: The "Stream Sniffer"</h3>
+                        <p class="text-sm text-gray-500 mb-4">If the auto-scan fails due to Cloudflare, drag this button to your bookmarks bar. Click it while on the video site to extract the link manually.</p>
+                        <a href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{var v=document.getElementsByTagName('video');var found=null;for(var i=0;i<v.length;i++){if(v[i].src&&v[i].src.includes('.m3u8'))found=v[i].src;}if(found){prompt('Stream found via Video Tag:',found)}else{alert('No stream detected yet. Play the video first.')}}})()" 
+                           class="inline-block bg-gray-800 border border-gray-600 text-gray-300 hover:text-white px-3 py-1 rounded text-xs font-mono cursor-grab">
+                            🕵️ Stream Sniffer Bookmarklet
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="mt-8 pt-6 border-t border-gray-800">
-                        <h3 class="font-bold text-gray-300 mb-2">Advanced: The "Stream Sniffer"</h3>
-                        <p class="text-sm text-gray-500 mb-4">If the auto-scan fails due to Cloudflare, drag this button to your bookmarks bar. Click it while on the video site to extract the link manually.</p>
-                        <a href="javascript:(function(){var m=performance.getEntriesByType('resource').map(e=>e.name).filter(n=>n.includes('.m3u8'));if(m.length){prompt('Stream URL found! Copy this:',m[m.length-1])}else{var v=document.getElementsByTagName('video');var found=null;for(var i=0;i<v.length;i++){if(v[i].src&&v[i].src.includes('.m3u8'))found=v[i].src;}if(found){prompt('Stream found via Video Tag:',found)}else{alert('No stream detected yet. Play the video first.')}}})()" 
-                           class="inline-block bg-gray-800 border border-gray-600 text-gray-300 hover:text-white px-3 py-1 rounded text-xs font-mono cursor-grab">
-                            🕵️ Stream Sniffer Bookmarklet
-                        </a>
-                    </div>
-                </div>
-            </div>
+        </div>
+    </main>
 
-        </div>
-    </main>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        // CONFIG
+        const CONFIG = {
+            firebase: {
+                apiKey: "AIzaSyAHAkFmBFw4hPcYq5lJbJoLS4jlcEDcTbk",
+                authDomain: "cloud-player-8c1b9.firebaseapp.com",
+                projectId: "cloud-player-8c1b9",
+                storageBucket: "cloud-player-8c1b9.firebasestorage.app",
+                messagingSenderId: "168933807242",
+                appId: "1:168933807242:web:2cd70df286176208d94973",
+                measurementId: "G-305QV5NYMK"
+            },
+            proxies: [
+                "https://corsproxy.io/?",
+                "https://api.allorigins.win/raw?url="
+            ]
+        };
 
-    <script>
-        /**
-         * ==========================================
-         * CLOUDSTREAM PRO - CORE ENGINE
-         * ==========================================
-         */
+        // --- CLASSES ---
 
-        // 1. CONFIGURATION
-        const CONFIG = {
-            firebase: {
-                apiKey: "AIzaSyAHAkFmBFw4hPcYq5lJbJoLS4jlcEDcTbk",
-                authDomain: "cloud-player-8c1b9.firebaseapp.com",
-                projectId: "cloud-player-8c1b9",
-                storageBucket: "cloud-player-8c1b9.firebasestorage.app",
-                messagingSenderId: "168933807242",
-                appId: "1:168933807242:web:2cd70df286176208d94973",
-                measurementId: "G-305QV5NYMK"
-            },
-            proxies: [
-                "https://corsproxy.io/?",
-                "https://api.allorigins.win/raw?url="
-            ]
-        };
+        class AppStore {
+            constructor() {
+                this.user = null;
+                this.data = { history: [], favorites: [], playlists: {} };
+                this.currentVideo = null;
+                this.dbUnsubscribe = null;
+                
+                try {
+                    firebase.initializeApp(CONFIG.firebase);
+                    this.auth = firebase.auth();
+                    this.db = firebase.firestore();
+                    this.setupAuthListener();
+                } catch (e) {
+                    console.error("Firebase Init Error:", e);
+                }
+            }
 
-        // 2. STATE MANAGEMENT (Store)
-        class AppStore {
-            constructor() {
-                this.user = null;
-                this.data = { history: [], favorites: [], playlists: {} };
-                this.currentVideo = null;
-                this.dbUnsubscribe = null;
-                
-                // Initialize Firebase
-                firebase.initializeApp(CONFIG.firebase);
-                this.auth = firebase.auth();
-                this.db = firebase.firestore();
-                
-                this.setupAuthListener();
-            }
+            setupAuthListener() {
+                this.auth.onAuthStateChanged(user => {
+                    this.user = user;
+                    window.app.ui.updateAuth(user);
+                    if (user) {
+                        this.syncData(user.uid);
+                    } else {
+                        if (this.dbUnsubscribe) this.dbUnsubscribe();
+                        this.data = { history: [], favorites: [], playlists: {} };
+                    }
+                });
+            }
 
-            setupAuthListener() {
-                this.auth.onAuthStateChanged(user => {
-                    this.user = user;
-                    app.ui.updateAuth(user);
-                    if (user) {
-                        this.syncData(user.uid);
-                    } else {
-                        if (this.dbUnsubscribe) this.dbUnsubscribe();
-                        this.data = { history: [], favorites: [], playlists: {} };
-                        app.ui.renderList();
-                    }
-                });
-            }
+            syncData(uid) {
+                this.dbUnsubscribe = this.db.collection('users').doc(uid).onSnapshot(doc => {
+                    if (doc.exists) {
+                        const cloudData = doc.data();
+                        this.data.history = cloudData.history || [];
+                        this.data.favorites = cloudData.favorites || [];
+                        this.data.playlists = cloudData.playlists || {};
+                    }
+                });
+            }
 
-            syncData(uid) {
-                this.dbUnsubscribe = this.db.collection('users').doc(uid).onSnapshot(doc => {
-                    if (doc.exists) {
-                        const cloudData = doc.data();
-                        this.data.history = cloudData.history || [];
-                        this.data.favorites = cloudData.favorites || [];
-                        this.data.playlists = cloudData.playlists || {};
-                        app.ui.renderList();
-                        app.ui.updateFavButton();
-                    }
-                });
-            }
+            async addAction(type, value, extra = null) {
+                if (!this.user) return;
+                
+                const docRef = this.db.collection('users').doc(this.user.uid);
+                try {
+                    if (type === 'history') {
+                        this.data.history.unshift(value); 
+                        await docRef.set({ history: firebase.firestore.FieldValue.arrayUnion(value) }, { merge: true });
+                    }
+                } catch (e) {
+                    console.error("Sync Error", e);
+                }
+            }
+        }
 
-            async addAction(type, value, extra = null) {
-                if (!this.user) {
-                    // Local fallback could go here, but for "Pro" we ask login
-                    app.ui.toast("Please sign in to save data.", "error");
-                    return;
-                }
-                const docRef = this.db.collection('users').doc(this.user.uid);
-                
-                try {
-                    if (type === 'history') {
-                        // Optimistic UI update
-                        this.data.history.unshift(value); 
-                        app.ui.renderList();
-                        
-                        await docRef.set({
-                            history: firebase.firestore.FieldValue.arrayUnion(value)
-                        }, { merge: true });
-                    } else if (type === 'favorite') {
-                        if (this.data.favorites.includes(value)) {
-                            await docRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(value) });
-                            app.ui.toast("Removed from Favorites");
-                        } else {
-                            await docRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(value) });
-                            app.ui.toast("Added to Favorites");
-                        }
-                    } else if (type === 'playlist' && extra) {
-                        let update = {};
-                        update[`playlists.${extra}`] = firebase.firestore.FieldValue.arrayUnion(value);
-                        await docRef.set(update, { merge: true });
-                        app.ui.toast(`Added to ${extra}`);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    app.ui.toast("Sync Error", "error");
-                }
-            }
-        }
+        class VideoEngine {
+            constructor() {
+                this.hls = null;
+                this.container = document.getElementById('active-player');
+                this.placeholder = document.getElementById('player-placeholder');
+                this.qualityCtrl = document.getElementById('quality-control');
+                this.qualitySelect = document.getElementById('quality-select');
+            }
 
-        // 3. VIDEO ENGINE
-        class VideoEngine {
-            constructor() {
-                this.hls = null;
-                this.container = document.getElementById('active-player');
-                this.placeholder = document.getElementById('player-placeholder');
-            }
+            load(url) {
+                this.reset();
+                window.app.store.currentVideo = url;
+                window.app.store.addAction('history', url);
 
-            load(url) {
-                this.reset();
-                app.store.currentVideo = url;
-                app.store.addAction('history', url);
-                app.ui.updateFavButton();
+                if (url.includes('.m3u8')) this.playHLS(url);
+                else if (this.isYoutube(url)) this.playYoutube(url);
+                else if (this.isDirectFile(url)) this.playDirect(url);
+                else this.playEmbed(url);
+            }
 
-                // Determine Type
-                if (url.includes('.m3u8')) {
-                    this.playHLS(url);
-                } else if (this.isYoutube(url)) {
-                    this.playYoutube(url);
-                } else if (this.isDirectFile(url)) {
-                    this.playDirect(url);
-                } else {
-                    this.playEmbed(url); // Fallback to Smart Embed
-                }
-            }
+            reset() {
+                if (this.hls) { this.hls.destroy(); this.hls = null; }
+                this.container.innerHTML = '';
+                this.container.classList.remove('hidden');
+                this.placeholder.classList.add('hidden');
+                document.getElementById('fallback-trigger').classList.add('hidden');
+                this.qualityCtrl.classList.add('hidden');
+                this.qualitySelect.innerHTML = '<option value="-1">Auto</option>';
+            }
 
-            reset() {
-                if (this.hls) {
-                    this.hls.destroy();
-                    this.hls = null;
-                }
-                this.container.innerHTML = '';
-                this.container.classList.remove('hidden');
-                this.placeholder.classList.add('hidden');
-                document.getElementById('fallback-trigger').classList.add('hidden');
-            }
+            playHLS(url) {
+                const video = document.createElement('video');
+                video.controls = true; 
+                video.autoplay = true;
+                video.setAttribute('playsinline', '');
+                video.setAttribute('preload', 'auto'); // OPTIMIZATION: Force load
+                video.className = "w-full h-full object-contain";
+                this.container.appendChild(video);
 
-            playHLS(url) {
-                const video = document.createElement('video');
-                video.controls = true;
-                video.autoplay = true;
-                video.className = "w-full h-full object-contain";
-                this.container.appendChild(video);
+                if (Hls.isSupported()) {
+                    // OPTIMIZATION: Turbo Buffer Settings
+                    const hlsConfig = {
+                        maxBufferLength: 30, // 30s buffer
+                        maxMaxBufferLength: 600, // Up to 10 mins buffer
+                        enableWorker: true,
+                        lowLatencyMode: false, // Stability over speed
+                        backBufferLength: 90
+                    };
 
-                if (Hls.isSupported()) {
-                    this.hls = new Hls();
-                    this.hls.loadSource(url);
-                    this.hls.attachMedia(video);
-                    this.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-                    this.hls.on(Hls.Events.ERROR, (e, data) => {
-                        if (data.fatal) app.ui.toast("Stream Error: " + data.details, "error");
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = url;
-                }
-                app.ui.toast("Playing HLS Stream");
-            }
+                    this.hls = new Hls(hlsConfig);
+                    this.hls.loadSource(url);
+                    this.hls.attachMedia(video);
+                    
+                    this.hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+                        const levels = data.levels;
+                        if(levels.length > 1) {
+                            this.qualityCtrl.classList.remove('hidden');
+                            levels.forEach((level, index) => {
+                                const opt = document.createElement('option');
+                                opt.value = index;
+                                opt.text = level.height + 'p';
+                                this.qualitySelect.appendChild(opt);
+                            });
+                            this.qualitySelect.onchange = (e) => {
+                                this.hls.currentLevel = parseInt(e.target.value);
+                                window.app.ui.toast("Quality: " + e.target.options[e.target.selectedIndex].text);
+                            };
+                        }
+                        video.play();
+                    });
+                    this.hls.on(Hls.Events.ERROR, (e, data) => {
+                        if (data.fatal) window.app.ui.toast("Stream Error: " + data.details, "error");
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = url;
+                }
+                window.app.ui.toast("Playing HLS Stream (Turbo Mode)");
+            }
 
-            playYoutube(url) {
-                const id = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/)[2];
-                this.container.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`;
-            }
+            playYoutube(url) {
+                const id = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/)[2];
+                this.container.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`;
+            }
 
-            playDirect(url) {
-                this.container.innerHTML = `<video src="${url}" controls autoplay class="w-full h-full object-contain"></video>`;
-            }
+            playDirect(url) {
+                this.container.innerHTML = `<video src="${url}" controls autoplay preload="auto" playsinline class="w-full h-full object-contain"></video>`;
+            }
 
-            playEmbed(url) {
-                // Smart Converter Logic inline
-                let embedUrl = url;
-                try {
-                    const u = new URL(url);
-                    const path = u.pathname.replace(/\/$/, '');
-                    if (u.hostname.includes('xhamster')) {
-                        const m = path.match(/(xh[a-zA-Z0-9]+)/) || path.match(/(\d+)$/);
-                        if (m) embedUrl = `https://xhamster.com/embed/${m[1]}`;
-                    } else if (u.hostname.includes('pornhub')) {
-                        const m = url.match(/viewkey=([^&]+)/);
-                        if (m) embedUrl = `https://www.pornhub.com/embed/${m[1]}`;
-                    } else if (u.hostname.includes('xvideos')) {
-                        const m = url.match(/video(\d+)/);
-                        if (m) embedUrl = `https://www.xvideos.com/embedframe/${m[1]}`;
-                    }
-                } catch(e) {}
+            playEmbed(url) {
+                let embedUrl = url;
+                try {
+                    const u = new URL(url);
+                    const path = u.pathname.replace(/\/$/, '');
+                    if (u.hostname.includes('xhamster')) {
+                        const m = path.match(/(xh[a-zA-Z0-9]+)/) || path.match(/(\d+)$/);
+                        if (m) embedUrl = `https://xhamster.com/embed/${m[1]}`;
+                    } else if (u.hostname.includes('pornhub')) {
+                        const m = url.match(/viewkey=([^&]+)/);
+                        if (m) embedUrl = `https://www.pornhub.com/embed/${m[1]}`;
+                    } else if (u.hostname.includes('xvideos')) {
+                        const m = url.match(/video(\d+)/);
+                        if (m) embedUrl = `https://www.xvideos.com/embedframe/${m[1]}`;
+                    }
+                } catch(e) {}
 
-                this.container.innerHTML = `
-                    <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>
-                `;
-                
-                // Show fallback button for these types
-                document.getElementById('fallback-trigger').classList.remove('hidden');
-                app.ui.toast("Loaded Embed Player. If blocked, use Pop-out.", "info");
-            }
+                this.container.innerHTML = `<iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+                document.getElementById('fallback-trigger').classList.remove('hidden');
+                window.app.ui.toast("Loaded Embed Player. If blocked, use Pop-out.", "info");
+            }
 
-            isYoutube(url) { return url.match(/(youtube\.com|youtu\.be)/); }
-            isDirectFile(url) { return url.match(/\.(mp4|webm|ogg)$/i); }
+            isYoutube(url) { return url.match(/(youtube\.com|youtu\.be)/); }
+            isDirectFile(url) { return url.match(/\.(mp4|webm|ogg)$/i); }
 
-            playFromInput() {
-                const val = document.getElementById('videoInput').value.trim();
-                if (val) this.load(val);
-            }
+            playFromInput() {
+                const val = document.getElementById('videoInput').value.trim();
+                if (val) this.load(val);
+            }
 
-            openPopout() {
-                if (app.store.currentVideo) {
-                    window.open(app.store.currentVideo, 'PopoutPlayer', 'width=854,height=480,scrollbars=yes');
-                }
-            }
-        }
+            openPopout() {
+                if (window.app.store.currentVideo) {
+                    window.open(window.app.store.currentVideo, 'PopoutPlayer', 'width=854,height=480,scrollbars=yes');
+                }
+            }
+        }
 
-        // 4. LINK CONVERTER
-        class Converter {
-            async scan() {
-                const input = document.getElementById('convert-url').value.trim();
-                const btn = document.getElementById('btn-scan');
-                
-                if (!input) return app.ui.toast("Enter a URL first", "error");
+        class Converter {
+            async scan() {
+                const input = document.getElementById('convert-url').value.trim();
+                const btn = document.getElementById('btn-scan');
+                if (!input) return window.app.ui.toast("Enter a URL first", "error");
 
-                btn.innerHTML = '<span class="loader"></span> Scanning...';
-                btn.disabled = true;
+                btn.innerHTML = '<span class="loader"></span> Scanning...';
+                btn.disabled = true;
 
-                // Try proxies sequentially
-                let found = null;
-                for (const proxy of CONFIG.proxies) {
-                    try {
-                        const res = await fetch(proxy + encodeURIComponent(input));
-                        const text = await res.text();
-                        // Regex to find .m3u8 in source code (common in video players)
-                        const match = text.match(/(https?:\\?\/\\?\/[^"'\s]+\.m3u8[^"'\s]*)/);
-                        if (match) {
-                            found = match[0].replace(/\\/g, ''); // Unescape
-                            break;
-                        }
-                    } catch (e) { console.log("Proxy failed", proxy); }
-                }
+                let found = null;
+                for (const proxy of CONFIG.proxies) {
+                    try {
+                        const res = await fetch(proxy + encodeURIComponent(input));
+                        const text = await res.text();
+                        const match = text.match(/(https?:\\?\/\\?\/[^"'\s]+\.m3u8[^"'\s]*)/);
+                        if (match) {
+                            found = match[0].replace(/\\/g, ''); 
+                            break;
+                        }
+                    } catch (e) { console.log("Proxy failed", proxy); }
+                }
 
-                btn.innerHTML = '<span>Start Scan</span>';
-                btn.disabled = false;
+                btn.innerHTML = '<span>Start Scan</span>';
+                btn.disabled = false;
 
-                if (found) {
-                    document.getElementById('scan-output').value = found;
-                    document.getElementById('scan-result').classList.remove('hidden');
-                    app.ui.toast("Stream Link Found!", "success");
-                } else {
-                    app.ui.toast("Scan failed. Site is secure. Use the Sniffer bookmarklet.", "error");
-                }
-            }
+                if (found) {
+                    document.getElementById('scan-output').value = found;
+                    document.getElementById('scan-result').classList.remove('hidden');
+                    window.app.ui.toast("Stream Link Found!", "success");
+                } else {
+                    window.app.ui.toast("Scan failed. Site is secure. Use the Sniffer bookmarklet.", "error");
+                }
+            }
 
-            copyResult() {
-                const el = document.getElementById('scan-output');
-                el.select();
-                document.execCommand('copy');
-                app.ui.toast("Copied to clipboard");
-            }
+            copyResult() {
+                const el = document.getElementById('scan-output');
+                el.select();
+                document.execCommand('copy');
+                window.app.ui.toast("Copied to clipboard");
+            }
 
-            playResult() {
-                const url = document.getElementById('scan-output').value;
-                app.ui.navigate('player');
-                document.getElementById('videoInput').value = url;
-                app.player.load(url);
-            }
-        }
+            playResult() {
+                const url = document.getElementById('scan-output').value;
+                window.app.ui.navigate('player');
+                document.getElementById('videoInput').value = url;
+                window.app.player.load(url);
+            }
+        }
 
-        // 5. UI MANAGER
-        class UIManager {
-            constructor() {
-                this.currentListTab = 'history';
-                this.activePlaylist = null;
-            }
+        class UIManager {
+            constructor() { }
 
-            navigate(view) {
-                // Simple router
-                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-                document.getElementById(`view-${view}`).classList.remove('hidden');
-                
-                // Update Sidebar Active State
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-gray-800', 'text-white'));
-                // (Simplified active state logic for this demo)
-            }
+            navigate(view) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${view}`).classList.remove('hidden');
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-gray-800', 'text-white'));
+            }
 
-            toast(msg, type = "info") {
-                const bg = type === 'error' ? "#ef4444" : (type === 'success' ? "#22c55e" : "#3b82f6");
-                Toastify({
-                    text: msg,
-                    duration: 3000,
-                    gravity: "bottom", 
-                    position: "right", 
-                    style: { background: bg, borderRadius: "8px", fontSize: "14px" }
-                }).showToast();
-            }
+            toast(msg, type = "info") {
+                const bg = type === 'error' ? "#ef4444" : (type === 'success' ? "#22c55e" : "#3b82f6");
+                Toastify({
+                    text: msg,
+                    duration: 3000,
+                    gravity: "bottom", 
+                    position: "right", 
+                    style: { background: bg, borderRadius: "8px", fontSize: "14px" }
+                }).showToast();
+            }
 
-            updateAuth(user) {
-                const nameEl = document.getElementById('user-name');
-                const statusEl = document.getElementById('auth-status');
-                const btn = document.querySelector('#user-section button i');
-                
-                if (user) {
-                    nameEl.innerText = user.displayName || "User";
-                    statusEl.innerText = "Synced";
-                    statusEl.className = "text-xs text-green-500";
-                    btn.className = "fa-solid fa-right-from-bracket";
-                } else {
-                    nameEl.innerText = "Guest";
-                    statusEl.innerText = "Not synced";
-                    statusEl.className = "text-xs text-gray-500";
-                    btn.className = "fa-solid fa-right-to-bracket";
-                }
-            }
+            updateAuth(user) {
+                const nameEl = document.getElementById('user-name');
+                const statusEl = document.getElementById('auth-status');
+                const btn = document.querySelector('#user-section button i');
+                
+                if (user) {
+                    nameEl.innerText = user.displayName || "User";
+                    statusEl.innerText = "Synced";
+                    statusEl.className = "text-xs text-green-500";
+                    btn.className = "fa-solid fa-right-from-bracket";
+                } else {
+                    nameEl.innerText = "Guest";
+                    statusEl.innerText = "Not synced";
+                    statusEl.className = "text-xs text-gray-500";
+                    btn.className = "fa-solid fa-right-to-bracket";
+                }
+            }
+            
+            toggleMobileMenu() {
+                const sidebar = document.querySelector('aside');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('absolute');
+                sidebar.classList.toggle('z-50');
+                sidebar.classList.toggle('h-full');
+            }
+        }
 
-            switchListTab(tab) {
-                this.currentListTab = tab;
-                this.activePlaylist = null;
-                
-                // Tab styling
-                document.querySelectorAll('.list-tab').forEach(t => {
-                    t.classList.remove('text-brand-500', 'border-b-2', 'border-brand-500');
-                    t.classList.add('text-gray-500');
-                });
-                document.getElementById(`tab-${tab}`).classList.remove('text-gray-500');
-                document.getElementById(`tab-${tab}`).classList.add('text-brand-500', 'border-b-2', 'border-brand-500');
-                
-                this.renderList();
-            }
+        class App {
+            constructor() {
+                this.ui = new UIManager();
+                this.store = new AppStore();
+                this.player = new VideoEngine();
+                this.converter = new Converter();
+                // Data methods removed from UI
+                this.data = { toggleFavorite: () => {}, addToPlaylist: () => {} };
+                this.auth = {
+                    toggle: () => {
+                        if (this.store.user) {
+                            this.store.auth.signOut();
+                        } else {
+                            this.store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                                .catch(e => this.ui.toast(e.message, 'error'));
+                        }
+                    }
+                };
+            }
+        }
 
-            renderList() {
-                const container = document.getElementById('list-content');
-                const data = app.store.data;
-                const tab = this.currentListTab;
-                
-                container.innerHTML = '';
-
-                let items = [];
-                
-                if (tab === 'history') items = data.history;
-                else if (tab === 'favorites') items = data.favorites;
-                else if (tab === 'playlists') {
-                    if (this.activePlaylist) {
-                        // Header for Playlist Back
-                        const back = document.createElement('div');
-                        back.className = "p-2 mb-2 bg-gray-800 rounded cursor-pointer hover:bg-gray-700 text-sm font-bold flex items-center gap-2";
-                        back.innerHTML = `<i class="fa-solid fa-arrow-left"></i> ${this.activePlaylist}`;
-                        back.onclick = () => { this.activePlaylist = null; this.renderList(); };
-                        container.appendChild(back);
-                        items = data.playlists[this.activePlaylist] || [];
-                    } else {
-                        // Render Folders
-                        const names = Object.keys(data.playlists);
-                        if (names.length === 0) container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">No playlists.</div>';
-                        
-                        names.forEach(name => {
-                            const el = document.createElement('div');
-                            el.className = "flex justify-between items-center p-3 hover:bg-gray-800 rounded-lg group cursor-pointer transition";
-                            el.innerHTML = `
-                                <div class="flex items-center gap-3 overflow-hidden">
-                                    <i class="fa-solid fa-folder text-yellow-500"></i>
-                                    <span class="truncate text-sm font-medium">${name}</span>
-                                    <span class="text-xs text-gray-600">(${data.playlists[name].length})</span>
-                                </div>
-                                <button class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-trash"></i></button>
-                            `;
-                            el.querySelector('div').onclick = () => { this.activePlaylist = name; this.renderList(); };
-                            // Delete logic would go here
-                            container.appendChild(el);
-                        });
-                        return;
-                    }
-                }
-
-                if (items.length === 0) {
-                    container.innerHTML = '<div class="text-center py-10 text-gray-600 italic">List is empty.</div>';
-                    return;
-                }
-
-                items.forEach(url => {
-                    const el = document.createElement('div');
-                    el.className = "flex justify-between items-center p-3 hover:bg-gray-800 rounded-lg group transition";
-                    el.innerHTML = `
-                        <div class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1" onclick="app.player.load('${url}')">
-                            <i class="fa-solid fa-play text-gray-600 text-xs"></i>
-                            <span class="truncate text-sm text-gray-300 group-hover:text-white">${url}</span>
-                        </div>
-                        <button class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition ml-2 delete-btn">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    `;
-                    // Delete handler (simplified)
-                    el.querySelector('.delete-btn').onclick = () => { /* Add delete logic */ };
-                    container.appendChild(el);
-                });
-            }
-
-            updateFavButton() {
-                const btn = document.getElementById('btn-fav');
-                const url = app.store.currentVideo;
-                if (!url) return;
-                
-                const isFav = app.store.data.favorites.includes(url);
-                if (isFav) {
-                    btn.innerHTML = '<i class="fa-solid fa-star text-yellow-500"></i> Favorited';
-                    btn.classList.add('text-white');
-                } else {
-                    btn.innerHTML = '<i class="fa-regular fa-star"></i> Favorite';
-                    btn.classList.remove('text-white');
-                }
-            }
-            
-            toggleMobileMenu() {
-                const sidebar = document.querySelector('aside');
-                sidebar.classList.toggle('hidden');
-                sidebar.classList.toggle('absolute');
-                sidebar.classList.toggle('z-50');
-                sidebar.classList.toggle('h-full');
-            }
-        }
-
-        // 6. MAIN APP INITIALIZATION
-        class App {
-            constructor() {
-                this.ui = new UIManager();
-                this.store = new AppStore();
-                this.player = new VideoEngine();
-                this.converter = new Converter();
-                
-                // Expose methods for data
-                this.data = {
-                    toggleFavorite: () => this.store.addAction('favorite', this.store.currentVideo),
-                    addToPlaylist: () => {
-                        const name = prompt("Playlist Name:");
-                        if (name) this.store.addAction('playlist', this.store.currentVideo, name);
-                    }
-                };
-
-                // Expose auth toggle
-                this.auth = {
-                    toggle: () => {
-                        if (this.store.user) {
-                            this.store.auth.signOut();
-                        } else {
-                            this.store.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-                                .catch(e => this.ui.toast(e.message, 'error'));
-                        }
-                    }
-                };
-            }
-        }
-
-        // Start
-        const app = new App();
-
-    </script>
+        window.app = new App();
+    </script>
 </body>
 </html>
